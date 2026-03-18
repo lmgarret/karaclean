@@ -80,32 +80,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONF-01 | Phase 1 | Pending |
-| CONF-02 | Phase 1 | Pending |
-| CONF-03 | Phase 1 | Pending |
-| COND-01 | Phase 2 | Pending |
-| COND-02 | Phase 2 | Pending |
-| COND-03 | Phase 2 | Pending |
-| COND-04 | Phase 2 | Pending |
-| COND-05 | Phase 2 | Pending |
-| COND-06 | Phase 2 | Pending |
-| EXCP-01 | Phase 2 | Pending |
-| EXCP-02 | Phase 2 | Pending |
-| EXCP-03 | Phase 2 | Pending |
-| EXCP-04 | Phase 2 | Pending |
-| ACTN-01 | Phase 3 | Pending |
-| ACTN-02 | Phase 3 | Pending |
-| ACTN-03 | Phase 1 | Pending |
-| SCHED-01 | Phase 4 | Pending |
-| SCHED-02 | Phase 4 | Pending |
-| SCHED-03 | Phase 4 | Pending |
-| OBS-01 | Phase 3 | Pending |
+| CONF-01 | Phase 1: Config Loading and Validation | Pending |
+| CONF-02 | Phase 1: Config Loading and Validation | Pending |
+| CONF-03 | Phase 2: API Client and Authentication | Pending |
+| COND-01 | Phase 3: Age and Source Conditions | Pending |
+| COND-02 | Phase 3: Age and Source Conditions | Pending |
+| COND-03 | Phase 4: Status and Tag Conditions | Pending |
+| COND-04 | Phase 4: Status and Tag Conditions | Pending |
+| COND-05 | Phase 4: Status and Tag Conditions | Pending |
+| COND-06 | Phase 4: Status and Tag Conditions | Pending |
+| EXCP-01 | Phase 5: Exception Evaluation | Pending |
+| EXCP-02 | Phase 5: Exception Evaluation | Pending |
+| EXCP-03 | Phase 5: Exception Evaluation | Pending |
+| EXCP-04 | Phase 5: Exception Evaluation | Pending |
+| ACTN-01 | Phase 6: Actions and Dry-Run | Pending |
+| ACTN-02 | Phase 6: Actions and Dry-Run | Pending |
+| ACTN-03 | Phase 6: Actions and Dry-Run | Pending |
+| OBS-01  | Phase 7: Run Orchestrator and Observability | Pending |
+| SCHED-01 | Phase 8: Scheduler and Deployment | Pending |
+| SCHED-02 | Phase 8: Scheduler and Deployment | Pending |
+| SCHED-03 | Phase 8: Scheduler and Deployment | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
 - Mapped to phases: 20
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+*Last updated: 2026-03-18 after roadmap creation*
