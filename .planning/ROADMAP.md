@@ -139,11 +139,11 @@ Plans:
   3. The container runs as a long-lived daemon, executing rules on schedule and shutting down gracefully on SIGTERM/SIGINT
   4. A working Dockerfile produces a minimal image (scratch base, static binary) and a docker-compose.yml example shows sidecar deployment alongside Karakeep
   5. An example YAML config file documents all available conditions, exceptions, and actions
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md -- Config validation for schedule and timezone with robfig/cron v3 dependency
+- [ ] 08-02-PLAN.md -- Daemon loop with signal handling, Dockerfile, docker-compose, example config
 
 ## Progress
 
@@ -159,4 +159,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Exception Evaluation | 1/2 | In Progress|  |
 | 6. Actions and Dry-Run | 2/2 | Complete   | 2026-03-18 |
 | 7. Run Orchestrator and Observability | 2/2 | Complete   | 2026-03-18 |
-| 8. Scheduler and Deployment | 0/0 | Not started | - |
+| 8. Scheduler and Deployment | 0/2 | Planning complete | - |
