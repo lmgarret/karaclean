@@ -78,11 +78,11 @@ Plans:
   3. A rule with `hasTag: read-later` matches only bookmarks that carry the specified tag
   4. A rule with `lacksTag: keep` matches only bookmarks that do not carry the specified tag
   5. All condition types (age, source, status, tags) can be combined in a single rule and all must match for the rule to apply
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- Matcher: archived, favourited, hasTag, lacksTag conditions with tests
+- [ ] 04-02-PLAN.md -- Validation: reject empty hasTag/lacksTag strings with tests
 
 ### Phase 5: Exception Evaluation
 **Goal**: Users can protect bookmarks they care about from being affected by cleanup rules
