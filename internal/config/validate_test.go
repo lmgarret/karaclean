@@ -272,6 +272,47 @@ func TestValidate(t *testing.T) {
 				"rules[0].conditions.lacksTag: must not be empty",
 			},
 		},
+		{
+			name: "empty unless hasTag rejected",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Unless:     &config.Exceptions{HasTag: strPtr("")},
+				}},
+			},
+			wantErr: []string{"rules[0].unless.hasTag: must not be empty"},
+		},
+		{
+			name: "valid unless hasTag passes",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Unless:     &config.Exceptions{HasTag: strPtr("important")},
+				}},
+			},
+		},
+		{
+			name: "nil unless passes",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Unless:     nil,
+				}},
+			},
+		},
+		{
+			name: "unless with nil hasTag passes",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Unless:     &config.Exceptions{Favourited: boolPtr(true)},
+				}},
+			},
+		},
 	}
 
 	for _, tt := range tests {
