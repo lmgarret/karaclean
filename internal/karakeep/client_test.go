@@ -3,6 +3,7 @@ package karakeep_test
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -231,5 +232,97 @@ func TestListBookmarks_ErrorStatus(t *testing.T) {
 	_, err = client.ListBookmarks(context.Background())
 	if err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestArchiveBookmark_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("expected PATCH, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v1/bookmarks/bk-123" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		body, _ := io.ReadAll(r.Body)
+		if !strings.Contains(string(body), `"archived":true`) {
+			t.Errorf("body does not contain archived:true: %s", string(body))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(sampleBookmark("bk-123"))
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	if err := client.ArchiveBookmark(context.Background(), "bk-123"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestArchiveBookmark_ErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	err = client.ArchiveBookmark(context.Background(), "bk-123")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "archive bookmark") {
+		t.Errorf("error %q does not contain 'archive bookmark'", err.Error())
+	}
+	if !strings.Contains(err.Error(), "unexpected status 500") {
+		t.Errorf("error %q does not contain 'unexpected status 500'", err.Error())
+	}
+}
+
+func TestDeleteBookmark_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("expected DELETE, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v1/bookmarks/bk-456" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	if err := client.DeleteBookmark(context.Background(), "bk-456"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestDeleteBookmark_ErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	err = client.DeleteBookmark(context.Background(), "bk-456")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "delete bookmark") {
+		t.Errorf("error %q does not contain 'delete bookmark'", err.Error())
+	}
+	if !strings.Contains(err.Error(), "unexpected status 500") {
+		t.Errorf("error %q does not contain 'unexpected status 500'", err.Error())
 	}
 }

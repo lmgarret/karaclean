@@ -84,6 +84,33 @@ func (c *KarakeepClient) ListBookmarks(ctx context.Context) ([]engine.Bookmark, 
 	return all, nil
 }
 
+// ArchiveBookmark sets archived=true on the bookmark via PATCH /bookmarks/{id}.
+func (c *KarakeepClient) ArchiveBookmark(ctx context.Context, id string) error {
+	archived := true
+	resp, err := c.inner.UpdateBookmarkWithResponse(ctx, id, UpdateBookmarkJSONRequestBody{
+		Archived: &archived,
+	})
+	if err != nil {
+		return fmt.Errorf("archive bookmark %s: %w", id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("archive bookmark %s: unexpected status %d", id, resp.StatusCode())
+	}
+	return nil
+}
+
+// DeleteBookmark permanently removes the bookmark via DELETE /bookmarks/{id}.
+func (c *KarakeepClient) DeleteBookmark(ctx context.Context, id string) error {
+	resp, err := c.inner.DeleteBookmarkWithResponse(ctx, id)
+	if err != nil {
+		return fmt.Errorf("delete bookmark %s: %w", id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("delete bookmark %s: unexpected status %d", id, resp.StatusCode())
+	}
+	return nil
+}
+
 // toEngineBookmark maps a generated Bookmark to the engine domain type.
 func toEngineBookmark(b Bookmark) engine.Bookmark {
 	createdAt, _ := time.Parse(time.RFC3339, b.CreatedAt)

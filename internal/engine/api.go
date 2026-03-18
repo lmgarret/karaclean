@@ -12,4 +12,10 @@ type KarakeepAPI interface {
 	// ListBookmarks retrieves all bookmarks using cursor-based pagination.
 	// Returns the complete list across all pages.
 	ListBookmarks(ctx context.Context) ([]Bookmark, error)
+
+	// ArchiveBookmark sets archived=true on the bookmark via PATCH /bookmarks/{id}.
+	ArchiveBookmark(ctx context.Context, id string) error
+
+	// DeleteBookmark permanently removes the bookmark via DELETE /bookmarks/{id}.
+	DeleteBookmark(ctx context.Context, id string) error
 }

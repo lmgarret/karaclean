@@ -11,9 +11,14 @@ import (
 // mockAPI is a test double that implements engine.KarakeepAPI.
 // Its existence proves the interface is mockable without importing the karakeep package.
 type mockAPI struct {
-	checkAuthErr     error
-	listBookmarksRet []engine.Bookmark
-	listBookmarksErr error
+	checkAuthErr       error
+	listBookmarksRet   []engine.Bookmark
+	listBookmarksErr   error
+	archiveBookmarkErr error
+	deleteBookmarkErr  error
+
+	archiveBookmarkCalls []string
+	deleteBookmarkCalls  []string
 }
 
 func (m *mockAPI) CheckAuth(ctx context.Context) error {
@@ -22,6 +27,16 @@ func (m *mockAPI) CheckAuth(ctx context.Context) error {
 
 func (m *mockAPI) ListBookmarks(ctx context.Context) ([]engine.Bookmark, error) {
 	return m.listBookmarksRet, m.listBookmarksErr
+}
+
+func (m *mockAPI) ArchiveBookmark(ctx context.Context, id string) error {
+	m.archiveBookmarkCalls = append(m.archiveBookmarkCalls, id)
+	return m.archiveBookmarkErr
+}
+
+func (m *mockAPI) DeleteBookmark(ctx context.Context, id string) error {
+	m.deleteBookmarkCalls = append(m.deleteBookmarkCalls, id)
+	return m.deleteBookmarkErr
 }
 
 // Compile-time proof that mockAPI satisfies the interface.
@@ -60,6 +75,42 @@ func TestMockAPI(t *testing.T) {
 		api := &mockAPI{listBookmarksErr: want}
 		_, err := api.ListBookmarks(context.Background())
 		if err != want {
+			t.Errorf("got %v, want %v", err, want)
+		}
+	})
+
+	t.Run("ArchiveBookmark returns nil on success", func(t *testing.T) {
+		api := &mockAPI{}
+		if err := api.ArchiveBookmark(context.Background(), "bk-1"); err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if len(api.archiveBookmarkCalls) != 1 || api.archiveBookmarkCalls[0] != "bk-1" {
+			t.Errorf("expected archiveBookmarkCalls=[bk-1], got %v", api.archiveBookmarkCalls)
+		}
+	})
+
+	t.Run("ArchiveBookmark returns configured error", func(t *testing.T) {
+		want := errors.New("archive failed")
+		api := &mockAPI{archiveBookmarkErr: want}
+		if err := api.ArchiveBookmark(context.Background(), "bk-1"); err != want {
+			t.Errorf("got %v, want %v", err, want)
+		}
+	})
+
+	t.Run("DeleteBookmark returns nil on success", func(t *testing.T) {
+		api := &mockAPI{}
+		if err := api.DeleteBookmark(context.Background(), "bk-2"); err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if len(api.deleteBookmarkCalls) != 1 || api.deleteBookmarkCalls[0] != "bk-2" {
+			t.Errorf("expected deleteBookmarkCalls=[bk-2], got %v", api.deleteBookmarkCalls)
+		}
+	})
+
+	t.Run("DeleteBookmark returns configured error", func(t *testing.T) {
+		want := errors.New("delete failed")
+		api := &mockAPI{deleteBookmarkErr: want}
+		if err := api.DeleteBookmark(context.Background(), "bk-2"); err != want {
 			t.Errorf("got %v, want %v", err, want)
 		}
 	})
