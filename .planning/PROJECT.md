@@ -61,6 +61,8 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 | YAML config (UI later) | Fastest to ship, power-user friendly, UI is additive | — Pending |
 | Archive-then-delete pattern | Mirrors Karakeep's native archive feature; gives users a grace period | — Pending |
 | Single-user per instance | Simplifies auth and rule scoping; multi-user is additive | — Pending |
+| Tests required every phase | User requirement — all phases must include unit tests alongside implementation | — Pending |
+| OpenAPI codegen for API client | Karakeep has a complete OpenAPI spec in submodule — evaluate codegen (oapi-codegen or similar) in Phase 2 to avoid hand-writing HTTP client boilerplate | — Pending |
 
 ---
 *Last updated: 2026-03-18 after initialization*
