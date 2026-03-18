@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Timezone string `yaml:"timezone"`
 	Schedule string `yaml:"schedule"`
+	DryRun   bool   `yaml:"dryRun"`
 	Rules    []Rule `yaml:"rules"`
 }
 
