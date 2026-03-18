@@ -60,6 +60,10 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
+	if errs := cfg.Validate(); len(errs) > 0 {
+		return nil, &ValidationErrors{Errors: errs}
+	}
+
 	return &cfg, nil
 }
 

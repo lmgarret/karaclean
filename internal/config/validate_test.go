@@ -142,7 +142,7 @@ func TestValidate_NegativeOlderThan(t *testing.T) {
 	errs := cfg.Validate()
 	found := false
 	for _, e := range errs {
-		if strings.Contains(e.Field, "olderThan") && strings.Contains(e.Message, "must be positive") {
+		if strings.Contains(e.Field, "olderThan") && strings.Contains(e.Message, "must be a positive") {
 			found = true
 		}
 	}
