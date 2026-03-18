@@ -22,10 +22,10 @@
 
 ### Exceptions (EXCP)
 
-- [ ] **EXCP-01**: Rules support `unless favourited` — skip bookmark if starred
-- [ ] **EXCP-02**: Rules support `unless hasTag` — skip bookmark if it has a specific tag
-- [ ] **EXCP-03**: Rules support `unless hasNote` — skip if user has added a personal note
-- [ ] **EXCP-04**: Rules support `unless archived` / `unless notArchived` exception clause
+- [x] **EXCP-01**: Rules support `unless favourited` — skip bookmark if starred
+- [x] **EXCP-02**: Rules support `unless hasTag` — skip bookmark if it has a specific tag
+- [x] **EXCP-03**: Rules support `unless hasNote` — skip if user has added a personal note
+- [x] **EXCP-04**: Rules support `unless archived` / `unless notArchived` exception clause
 
 ### Actions (ACTN)
 
@@ -89,10 +89,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COND-04 | Phase 4: Status and Tag Conditions | Complete |
 | COND-05 | Phase 4: Status and Tag Conditions | Complete |
 | COND-06 | Phase 4: Status and Tag Conditions | Complete |
-| EXCP-01 | Phase 5: Exception Evaluation | Pending |
-| EXCP-02 | Phase 5: Exception Evaluation | Pending |
-| EXCP-03 | Phase 5: Exception Evaluation | Pending |
-| EXCP-04 | Phase 5: Exception Evaluation | Pending |
+| EXCP-01 | Phase 5: Exception Evaluation | Complete |
+| EXCP-02 | Phase 5: Exception Evaluation | Complete |
+| EXCP-03 | Phase 5: Exception Evaluation | Complete |
+| EXCP-04 | Phase 5: Exception Evaluation | Complete |
 | ACTN-01 | Phase 6: Actions and Dry-Run | Pending |
 | ACTN-02 | Phase 6: Actions and Dry-Run | Pending |
 | ACTN-03 | Phase 6: Actions and Dry-Run | Pending |

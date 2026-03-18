@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. API Client and Authentication | 0/3 | Planning complete | - |
 | 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
 | 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
-| 5. Exception Evaluation | 0/2 | Planning complete | - |
+| 5. Exception Evaluation | 1/2 | In Progress|  |
 | 6. Actions and Dry-Run | 0/0 | Not started | - |
 | 7. Run Orchestrator and Observability | 0/0 | Not started | - |
 | 8. Scheduler and Deployment | 0/0 | Not started | - |
