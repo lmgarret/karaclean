@@ -221,6 +221,57 @@ func TestValidate(t *testing.T) {
 				"rules[1].conditions.source",
 			},
 		},
+		{
+			name: "empty hasTag rejected",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{HasTag: strPtr("")},
+				}},
+			},
+			wantErr: []string{"rules[0].conditions.hasTag: must not be empty"},
+		},
+		{
+			name: "empty lacksTag rejected",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{LacksTag: strPtr("")},
+				}},
+			},
+			wantErr: []string{"rules[0].conditions.lacksTag: must not be empty"},
+		},
+		{
+			name: "valid hasTag passes",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{HasTag: strPtr("read-later")},
+				}},
+			},
+		},
+		{
+			name: "valid lacksTag passes",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{LacksTag: strPtr("keep")},
+				}},
+			},
+		},
+		{
+			name: "both empty hasTag and lacksTag produce two errors",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{HasTag: strPtr(""), LacksTag: strPtr("")},
+				}},
+			},
+			wantErr: []string{
+				"rules[0].conditions.hasTag: must not be empty",
+				"rules[0].conditions.lacksTag: must not be empty",
+			},
+		},
 	}
 
 	for _, tt := range tests {
