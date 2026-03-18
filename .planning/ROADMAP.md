@@ -109,11 +109,11 @@ Plans:
   2. A rule with `action: delete` permanently removes matched bookmarks via the Karakeep DELETE API
   3. When dry-run mode is enabled, no mutations (archive or delete) are executed against the API; all intended actions are logged instead
   4. Dry-run output clearly shows what each bookmark's fate would be (archive vs delete) and why (which rule matched)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- API interface extension, client methods, ExecuteAction with dry-run support
+- [ ] 06-02-PLAN.md -- DryRun config field, --dry-run flag, env var, precedence wiring
 
 ### Phase 7: Run Orchestrator and Observability
 **Goal**: A complete rule evaluation run executes safely with collect-then-act ordering and produces a summary report
@@ -157,6 +157,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
 | 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
 | 5. Exception Evaluation | 1/2 | In Progress|  |
-| 6. Actions and Dry-Run | 0/0 | Not started | - |
+| 6. Actions and Dry-Run | 0/2 | Planning complete | - |
 | 7. Run Orchestrator and Observability | 0/0 | Not started | - |
 | 8. Scheduler and Deployment | 0/0 | Not started | - |
