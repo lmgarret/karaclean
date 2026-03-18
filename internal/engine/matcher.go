@@ -29,5 +29,38 @@ func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time) bool
 		}
 	}
 
+	if c.Archived != nil {
+		if b.Archived != *c.Archived {
+			return false
+		}
+	}
+
+	if c.Favourited != nil {
+		if b.Favourited != *c.Favourited {
+			return false
+		}
+	}
+
+	if c.HasTag != nil {
+		found := false
+		for _, tag := range b.Tags {
+			if tag == *c.HasTag {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if c.LacksTag != nil {
+		for _, tag := range b.Tags {
+			if tag == *c.LacksTag {
+				return false
+			}
+		}
+	}
+
 	return true
 }
