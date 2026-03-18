@@ -46,11 +46,12 @@ Plans:
   1. Application validates the API bearer token against Karakeep on startup and exits with a clear error if authentication fails
   2. API client can list bookmarks with cursor-based pagination and return typed Go structs with all relevant fields (id, createdAt, archived, favourited, source, tags, note)
   3. API client interface (`KarakeepAPI`) is defined in the engine package, enabling mock-based testing without real HTTP calls
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
+- [ ] 02-00-PLAN.md -- Wave 0 test stubs: client_test.go, api_test.go, main_test.go (Nyquist compliance)
 - [ ] 02-01-PLAN.md -- oapi-codegen setup, generated client, engine types/interface, thin wrapper
-- [ ] 02-02-PLAN.md -- httptest client tests, engine mock test, main.go startup wiring
+- [ ] 02-02-PLAN.md -- Verify tests GREEN, fix JSON fixtures, main.go startup wiring with TestRequireEnv
 
 ### Phase 3: Age and Source Conditions
 **Goal**: Rules can identify bookmarks based on how old they are and where they came from
@@ -152,7 +153,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Config Loading and Validation | 0/2 | Planning complete | - |
-| 2. API Client and Authentication | 0/2 | Planning complete | - |
+| 2. API Client and Authentication | 0/3 | Planning complete | - |
 | 3. Age and Source Conditions | 0/0 | Not started | - |
 | 4. Status and Tag Conditions | 0/0 | Not started | - |
 | 5. Exception Evaluation | 0/0 | Not started | - |

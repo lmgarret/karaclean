@@ -2,8 +2,8 @@
 phase: 2
 slug: api-client-and-authentication
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-18
 ---
 
@@ -38,13 +38,16 @@ created: 2026-03-18
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 0 | CONF-03c | unit | `go test ./internal/karakeep/... -run TestCheckAuth_Success -v` | ❌ W0 | ⬜ pending |
-| 02-01-02 | 01 | 0 | CONF-03d | unit | `go test ./internal/karakeep/... -run TestCheckAuth_Unauthorized -v` | ❌ W0 | ⬜ pending |
-| 02-01-03 | 01 | 0 | CONF-03e | unit | `go test ./internal/karakeep/... -run TestCheckAuth_NetworkError -v` | ❌ W0 | ⬜ pending |
-| 02-01-04 | 01 | 0 | CONF-03f | unit | `go test ./internal/karakeep/... -run TestListBookmarks_SinglePage -v` | ❌ W0 | ⬜ pending |
-| 02-01-05 | 01 | 0 | CONF-03g | unit | `go test ./internal/karakeep/... -run TestListBookmarks_Pagination -v` | ❌ W0 | ⬜ pending |
-| 02-01-06 | 01 | 0 | CONF-03h | unit | `go test ./internal/karakeep/... -run TestListBookmarks_Empty -v` | ❌ W0 | ⬜ pending |
-| 02-02-01 | 02 | 0 | CONF-03i | unit | `go test ./internal/engine/... -run TestMockAPI -v` | ❌ W0 | ⬜ pending |
+| 02-00-01 | 00 | 0 | CONF-03a–i | stub | `go test ./internal/config/... -v -count=1` (stubs not yet compilable until Wave 1) | ✅ W0 | ⬜ pending |
+| 02-01-01 | 01 | 1 | CONF-03c | unit | `go test ./internal/karakeep/... -run TestCheckAuth_Success -v` | ✅ W0 | ⬜ pending |
+| 02-01-02 | 01 | 1 | CONF-03d | unit | `go test ./internal/karakeep/... -run TestCheckAuth_Unauthorized -v` | ✅ W0 | ⬜ pending |
+| 02-01-03 | 01 | 1 | CONF-03e | unit | `go test ./internal/karakeep/... -run TestCheckAuth_NetworkError -v` | ✅ W0 | ⬜ pending |
+| 02-01-04 | 01 | 1 | CONF-03f | unit | `go test ./internal/karakeep/... -run TestListBookmarks_SinglePage -v` | ✅ W0 | ⬜ pending |
+| 02-01-05 | 01 | 1 | CONF-03g | unit | `go test ./internal/karakeep/... -run TestListBookmarks_Pagination -v` | ✅ W0 | ⬜ pending |
+| 02-01-06 | 01 | 1 | CONF-03h | unit | `go test ./internal/karakeep/... -run TestListBookmarks_Empty -v` | ✅ W0 | ⬜ pending |
+| 02-02-01 | 02 | 2 | CONF-03i | unit | `go test ./internal/engine/... -run TestMockAPI -v` | ✅ W0 | ⬜ pending |
+| 02-02-02 | 02 | 2 | CONF-03a | unit | `go test ./cmd/karaclean/... -run TestRequireEnv -v` | ✅ W0 | ⬜ pending |
+| 02-02-03 | 02 | 2 | CONF-03b | unit | `go test ./cmd/karaclean/... -run TestRequireEnv -v` | ✅ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,9 +55,10 @@ created: 2026-03-18
 
 ## Wave 0 Requirements
 
-- [ ] `internal/karakeep/client_test.go` — stubs for CONF-03c through CONF-03h (httptest-based)
-- [ ] `internal/engine/api_test.go` — stubs for CONF-03i (mock implements interface)
-- [ ] Generated code from `go generate` must exist before tests can compile
+- [x] `internal/karakeep/client_test.go` — stubs for CONF-03c through CONF-03h (httptest-based) — created in Plan 02-00
+- [x] `internal/engine/api_test.go` — stubs for CONF-03i (mock implements interface) — created in Plan 02-00
+- [x] `cmd/karaclean/main_test.go` — stubs for CONF-03a and CONF-03b (TestRequireEnv) — created in Plan 02-00
+- [ ] Generated code from `go generate` must exist before karakeep tests can compile (Wave 1)
 
 *Wave 0 creates test stubs before implementation tasks begin.*
 
@@ -70,11 +74,11 @@ created: 2026-03-18
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (client_test.go, api_test.go, main_test.go)
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** pending execution
