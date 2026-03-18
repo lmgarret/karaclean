@@ -17,8 +17,8 @@
 - [x] **COND-02**: Rules can filter by source: `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`
 - [ ] **COND-03**: Rules can match on archived status (`archived: true/false`)
 - [ ] **COND-04**: Rules can match on favourited status (`favourited: true/false`)
-- [ ] **COND-05**: Rules can match bookmarks that have a specific tag (`hasTag`)
-- [ ] **COND-06**: Rules can match bookmarks that lack a specific tag (`lacksTag`)
+- [x] **COND-05**: Rules can match bookmarks that have a specific tag (`hasTag`)
+- [x] **COND-06**: Rules can match bookmarks that lack a specific tag (`lacksTag`)
 
 ### Exceptions (EXCP)
 
@@ -87,8 +87,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COND-02 | Phase 3: Age and Source Conditions | Complete |
 | COND-03 | Phase 4: Status and Tag Conditions | Pending |
 | COND-04 | Phase 4: Status and Tag Conditions | Pending |
-| COND-05 | Phase 4: Status and Tag Conditions | Pending |
-| COND-06 | Phase 4: Status and Tag Conditions | Pending |
+| COND-05 | Phase 4: Status and Tag Conditions | Complete |
+| COND-06 | Phase 4: Status and Tag Conditions | Complete |
 | EXCP-01 | Phase 5: Exception Evaluation | Pending |
 | EXCP-02 | Phase 5: Exception Evaluation | Pending |
 | EXCP-03 | Phase 5: Exception Evaluation | Pending |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-18T14:18:32.420Z"
-last_activity: 2026-03-18 -- Completed plan 03-02 (MatchesConditions matcher)
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-18T14:33:33.078Z"
+last_activity: 2026-03-18 -- Completed plan 04-02 (empty hasTag/lacksTag validation)
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 3 complete -- matcher foundation ready for Phase 4 extensions
+**Current focus:** Phase 4 in progress -- tag condition validation complete, matcher implementation next
 
 ## Current Position
 
-Phase: 3 of 8 (Age and Source Conditions) -- COMPLETE
-Plan: 2 of 2 in current phase -- COMPLETE
-Status: Phase Complete
-Last activity: 2026-03-18 -- Completed plan 03-02 (MatchesConditions matcher)
+Phase: 4 of 8 (Status and Tag Conditions)
+Plan: 2 of 3 in current phase -- COMPLETE
+Status: In Progress
+Last activity: 2026-03-18 -- Completed plan 04-02 (empty hasTag/lacksTag validation)
 
 Progress: [██████████] 100%
 
@@ -54,6 +54,8 @@ Progress: [██████████] 100%
 | Phase 01 P02 | 3min | 2 tasks | 3 files |
 | Phase 03 P01 | 2min | 2 tasks | 8 files |
 | Phase 03 P02 | 2min | 1 tasks | 2 files |
+| Phase 04 P01 | 2min | 2 tasks | 2 files |
+| Phase 04 P02 | 1min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -77,6 +79,8 @@ Recent decisions affecting current work:
 - 03-01: Fixed day counts: mo=30d, y=365d (deterministic, appropriate for GC retention)
 - 03-02: Strictly-greater-than semantics for olderThan (exact boundary does not match)
 - 03-02: duration.Parse error intentionally ignored in matcher (config validation guarantees valid format)
+- [Phase 04]: Case-sensitive tag matching with == (no strings.EqualFold)
+- [Phase 04]: No nil-guard for Tags slice -- Go range over nil is safe
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T14:18:32.413Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-status-and-tag-conditions/04-CONTEXT.md
+Last session: 2026-03-18T14:33:33.072Z
+Stopped at: Completed 04-02-PLAN.md
+Resume file: None
