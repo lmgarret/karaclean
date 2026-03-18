@@ -1,6 +1,8 @@
 package config_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -156,6 +158,74 @@ func TestLoad_FileNotFound(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "opening config") {
 		t.Errorf("error should contain 'opening config', got: %s", err)
+	}
+}
+
+func TestLoad_DryRunTrue(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `dryRun: true
+rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+`
+	path := filepath.Join(dir, "dryrun_true.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.DryRun != true {
+		t.Errorf("cfg.DryRun = %v, want true", cfg.DryRun)
+	}
+}
+
+func TestLoad_DryRunFalse(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `dryRun: false
+rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+`
+	path := filepath.Join(dir, "dryrun_false.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.DryRun != false {
+		t.Errorf("cfg.DryRun = %v, want false", cfg.DryRun)
+	}
+}
+
+func TestLoad_DryRunOmitted(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+`
+	path := filepath.Join(dir, "dryrun_omitted.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.DryRun != false {
+		t.Errorf("cfg.DryRun = %v, want false (default)", cfg.DryRun)
 	}
 }
 
