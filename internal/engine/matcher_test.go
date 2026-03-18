@@ -257,3 +257,149 @@ func TestMatchesConditions(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchesExceptions(t *testing.T) {
+	tests := []struct {
+		name       string
+		bookmark   engine.Bookmark
+		exceptions *config.Exceptions
+		want       bool
+	}{
+		// --- nil / empty ---
+		{
+			name:       "nil exceptions returns false (no protection)",
+			bookmark:   engine.Bookmark{ID: "1"},
+			exceptions: nil,
+			want:       false,
+		},
+		{
+			name:       "all-nil-fields exceptions returns false",
+			bookmark:   engine.Bookmark{ID: "2"},
+			exceptions: &config.Exceptions{},
+			want:       false,
+		},
+		// --- Favourited ---
+		{
+			name:       "Favourited=true fires when bookmark is favourited",
+			bookmark:   engine.Bookmark{ID: "3", Favourited: true},
+			exceptions: &config.Exceptions{Favourited: boolPtr(true)},
+			want:       true,
+		},
+		{
+			name:       "Favourited=true does NOT fire when bookmark is not favourited",
+			bookmark:   engine.Bookmark{ID: "4", Favourited: false},
+			exceptions: &config.Exceptions{Favourited: boolPtr(true)},
+			want:       false,
+		},
+		{
+			name:       "Favourited=false fires when bookmark is not favourited",
+			bookmark:   engine.Bookmark{ID: "5", Favourited: false},
+			exceptions: &config.Exceptions{Favourited: boolPtr(false)},
+			want:       true,
+		},
+		// --- HasTag ---
+		{
+			name:       "HasTag important fires when bookmark has that tag",
+			bookmark:   engine.Bookmark{ID: "6", Tags: []string{"news", "important"}},
+			exceptions: &config.Exceptions{HasTag: strPtr("important")},
+			want:       true,
+		},
+		{
+			name:       "HasTag important does NOT fire when bookmark lacks that tag",
+			bookmark:   engine.Bookmark{ID: "7", Tags: []string{"news", "tech"}},
+			exceptions: &config.Exceptions{HasTag: strPtr("important")},
+			want:       false,
+		},
+		{
+			name:       "HasTag important does NOT fire when bookmark tags is nil",
+			bookmark:   engine.Bookmark{ID: "8"},
+			exceptions: &config.Exceptions{HasTag: strPtr("important")},
+			want:       false,
+		},
+		{
+			name:       "HasTag is case-sensitive",
+			bookmark:   engine.Bookmark{ID: "9", Tags: []string{"important"}},
+			exceptions: &config.Exceptions{HasTag: strPtr("Important")},
+			want:       false,
+		},
+		// --- HasNote ---
+		{
+			name:       "HasNote=true fires when bookmark has a non-empty note",
+			bookmark:   engine.Bookmark{ID: "10", Note: "my note"},
+			exceptions: &config.Exceptions{HasNote: boolPtr(true)},
+			want:       true,
+		},
+		{
+			name:       "HasNote=true does NOT fire when bookmark note is empty",
+			bookmark:   engine.Bookmark{ID: "11", Note: ""},
+			exceptions: &config.Exceptions{HasNote: boolPtr(true)},
+			want:       false,
+		},
+		{
+			name:       "HasNote=true does NOT fire when bookmark note is whitespace-only",
+			bookmark:   engine.Bookmark{ID: "12", Note: "   "},
+			exceptions: &config.Exceptions{HasNote: boolPtr(true)},
+			want:       false,
+		},
+		// --- Archived ---
+		{
+			name:       "Archived=true fires when bookmark is archived",
+			bookmark:   engine.Bookmark{ID: "13", Archived: true},
+			exceptions: &config.Exceptions{Archived: boolPtr(true)},
+			want:       true,
+		},
+		{
+			name:       "Archived=true does NOT fire when bookmark is not archived",
+			bookmark:   engine.Bookmark{ID: "14", Archived: false},
+			exceptions: &config.Exceptions{Archived: boolPtr(true)},
+			want:       false,
+		},
+		{
+			name:       "Archived=false fires when bookmark is not archived",
+			bookmark:   engine.Bookmark{ID: "15", Archived: false},
+			exceptions: &config.Exceptions{Archived: boolPtr(false)},
+			want:       true,
+		},
+		// --- OR semantics ---
+		{
+			name:       "OR: Favourited=true + HasTag=keep fires when only Favourited matches",
+			bookmark:   engine.Bookmark{ID: "16", Favourited: true, Tags: []string{"news"}},
+			exceptions: &config.Exceptions{Favourited: boolPtr(true), HasTag: strPtr("keep")},
+			want:       true,
+		},
+		{
+			name:       "OR: Favourited=true + HasTag=keep fires when only HasTag matches",
+			bookmark:   engine.Bookmark{ID: "17", Favourited: false, Tags: []string{"keep"}},
+			exceptions: &config.Exceptions{Favourited: boolPtr(true), HasTag: strPtr("keep")},
+			want:       true,
+		},
+		{
+			name:       "OR: Favourited=true + HasTag=keep does NOT fire when neither matches",
+			bookmark:   engine.Bookmark{ID: "18", Favourited: false, Tags: []string{"news"}},
+			exceptions: &config.Exceptions{Favourited: boolPtr(true), HasTag: strPtr("keep")},
+			want:       false,
+		},
+		// --- All four set, only one fires ---
+		{
+			name: "all four exceptions set, only HasNote fires -> returns true",
+			bookmark: engine.Bookmark{
+				ID: "19", Favourited: false, Tags: []string{"news"},
+				Note: "important note", Archived: false,
+			},
+			exceptions: &config.Exceptions{
+				Favourited: boolPtr(true), HasTag: strPtr("keep"),
+				HasNote: boolPtr(true), Archived: boolPtr(true),
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := engine.MatchesExceptions(tt.bookmark, tt.exceptions)
+			if got != tt.want {
+				t.Errorf("MatchesExceptions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
