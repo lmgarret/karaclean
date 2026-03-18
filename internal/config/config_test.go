@@ -1,0 +1,180 @@
+package config_test
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/lm/karaclean/internal/config"
+)
+
+func intPtr(i int) *int       { return &i }
+func strPtr(s string) *string { return &s }
+func boolPtr(b bool) *bool    { return &b }
+
+func TestLoad_ValidFull(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_full.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Timezone != "America/New_York" {
+		t.Errorf("timezone = %q, want %q", cfg.Timezone, "America/New_York")
+	}
+	if cfg.Schedule != "0 3 * * *" {
+		t.Errorf("schedule = %q, want %q", cfg.Schedule, "0 3 * * *")
+	}
+	if len(cfg.Rules) != 2 {
+		t.Fatalf("len(rules) = %d, want 2", len(cfg.Rules))
+	}
+
+	// First rule
+	r0 := cfg.Rules[0]
+	if r0.Name != "old-rss-cleanup" {
+		t.Errorf("rules[0].name = %q, want %q", r0.Name, "old-rss-cleanup")
+	}
+	if r0.Conditions == nil {
+		t.Fatal("rules[0].conditions is nil")
+	}
+	if r0.Conditions.OlderThan == nil || *r0.Conditions.OlderThan != 30 {
+		t.Errorf("rules[0].conditions.olderThan = %v, want 30", r0.Conditions.OlderThan)
+	}
+	if r0.Conditions.Source == nil || *r0.Conditions.Source != "rss" {
+		t.Errorf("rules[0].conditions.source = %v, want rss", r0.Conditions.Source)
+	}
+	if r0.Unless == nil {
+		t.Fatal("rules[0].unless is nil")
+	}
+	if r0.Unless.Favourited == nil || *r0.Unless.Favourited != true {
+		t.Errorf("rules[0].unless.favourited = %v, want true", r0.Unless.Favourited)
+	}
+	if r0.Action != "archive" {
+		t.Errorf("rules[0].action = %q, want %q", r0.Action, "archive")
+	}
+
+	// Second rule
+	r1 := cfg.Rules[1]
+	if r1.Action != "delete" {
+		t.Errorf("rules[1].action = %q, want %q", r1.Action, "delete")
+	}
+	if r1.Unless == nil {
+		t.Fatal("rules[1].unless is nil")
+	}
+	if r1.Unless.HasTag == nil || *r1.Unless.HasTag != "keep-forever" {
+		t.Errorf("rules[1].unless.hasTag = %v, want keep-forever", r1.Unless.HasTag)
+	}
+	if r1.Unless.HasNote == nil || *r1.Unless.HasNote != true {
+		t.Errorf("rules[1].unless.hasNote = %v, want true", r1.Unless.HasNote)
+	}
+}
+
+func TestLoad_ValidMinimal(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_minimal.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(cfg.Rules) != 1 {
+		t.Fatalf("len(rules) = %d, want 1", len(cfg.Rules))
+	}
+
+	r := cfg.Rules[0]
+	if r.Conditions == nil {
+		t.Fatal("rules[0].conditions is nil")
+	}
+	if r.Conditions.OlderThan == nil || *r.Conditions.OlderThan != 30 {
+		t.Errorf("rules[0].conditions.olderThan = %v, want 30", r.Conditions.OlderThan)
+	}
+	if r.Action != "archive" {
+		t.Errorf("rules[0].action = %q, want %q", r.Action, "archive")
+	}
+	if r.Name != "" {
+		t.Errorf("rules[0].name = %q, want empty string", r.Name)
+	}
+	if r.Unless != nil {
+		t.Errorf("rules[0].unless = %v, want nil", r.Unless)
+	}
+}
+
+func TestLoad_PointerSemantics(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_minimal.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	r := cfg.Rules[0]
+	if r.Conditions.Source != nil {
+		t.Errorf("conditions.source = %v, want nil (absent)", r.Conditions.Source)
+	}
+	if r.Conditions.Archived != nil {
+		t.Errorf("conditions.archived = %v, want nil (absent)", r.Conditions.Archived)
+	}
+	if r.Conditions.Favourited != nil {
+		t.Errorf("conditions.favourited = %v, want nil (absent)", r.Conditions.Favourited)
+	}
+	if r.Conditions.HasTag != nil {
+		t.Errorf("conditions.hasTag = %v, want nil (absent)", r.Conditions.HasTag)
+	}
+	if r.Conditions.LacksTag != nil {
+		t.Errorf("conditions.lacksTag = %v, want nil (absent)", r.Conditions.LacksTag)
+	}
+}
+
+func TestLoad_UnknownFieldTop(t *testing.T) {
+	_, err := config.Load("testdata/unknown_field_top.yaml")
+	if err == nil {
+		t.Fatal("expected error for unknown top-level field, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknownField") {
+		t.Errorf("error should mention unknownField, got: %s", err)
+	}
+}
+
+func TestLoad_UnknownFieldNested(t *testing.T) {
+	_, err := config.Load("testdata/unknown_field_nested.yaml")
+	if err == nil {
+		t.Fatal("expected error for unknown nested field, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknownCondition") {
+		t.Errorf("error should mention unknownCondition, got: %s", err)
+	}
+}
+
+func TestLoad_WrongType(t *testing.T) {
+	_, err := config.Load("testdata/wrong_type.yaml")
+	if err == nil {
+		t.Fatal("expected error for wrong type, got nil")
+	}
+}
+
+func TestLoad_FileNotFound(t *testing.T) {
+	_, err := config.Load("nonexistent.yaml")
+	if err == nil {
+		t.Fatal("expected error for nonexistent file, got nil")
+	}
+	if !strings.Contains(err.Error(), "opening config") {
+		t.Errorf("error should contain 'opening config', got: %s", err)
+	}
+}
+
+func TestResolvePath_Flag(t *testing.T) {
+	got := config.ResolvePath("explicit.yaml")
+	if got != "explicit.yaml" {
+		t.Errorf("ResolvePath(explicit.yaml) = %q, want %q", got, "explicit.yaml")
+	}
+}
+
+func TestResolvePath_EnvVar(t *testing.T) {
+	t.Setenv("KARACLEAN_CONFIG", "/custom/path.yaml")
+	got := config.ResolvePath("")
+	if got != "/custom/path.yaml" {
+		t.Errorf("ResolvePath('') with env = %q, want %q", got, "/custom/path.yaml")
+	}
+}
+
+func TestResolvePath_Default(t *testing.T) {
+	t.Setenv("KARACLEAN_CONFIG", "")
+	got := config.ResolvePath("")
+	if got != "/config/karaclean.yaml" {
+		t.Errorf("ResolvePath('') default = %q, want %q", got, "/config/karaclean.yaml")
+	}
+}

@@ -1,0 +1,4 @@
+rules:
+  - conditions:
+      olderThan: "not-a-number"
+    action: archive

@@ -1,0 +1,4 @@
+rules:
+  - conditions:
+      olderThan: 30
+    action: archive

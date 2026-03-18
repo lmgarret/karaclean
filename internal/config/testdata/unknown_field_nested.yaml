@@ -1,0 +1,5 @@
+rules:
+  - conditions:
+      olderThan: 7
+      unknownCondition: true
+    action: archive

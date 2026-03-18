@@ -1,0 +1,19 @@
+timezone: America/New_York
+schedule: "0 3 * * *"
+rules:
+  - name: old-rss-cleanup
+    conditions:
+      olderThan: 30
+      source: rss
+    unless:
+      favourited: true
+    action: archive
+
+  - name: delete-ancient-archived
+    conditions:
+      olderThan: 90
+      archived: true
+    unless:
+      hasTag: keep-forever
+      hasNote: true
+    action: delete

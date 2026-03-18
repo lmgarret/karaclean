@@ -1,0 +1,7 @@
+timezone: UTC
+schedule: "0 * * * *"
+unknownField: bad
+rules:
+  - conditions:
+      olderThan: 7
+    action: archive
