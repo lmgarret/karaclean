@@ -35,8 +35,8 @@ func TestLoad_ValidFull(t *testing.T) {
 	if r0.Conditions == nil {
 		t.Fatal("rules[0].conditions is nil")
 	}
-	if r0.Conditions.OlderThan == nil || *r0.Conditions.OlderThan != 30 {
-		t.Errorf("rules[0].conditions.olderThan = %v, want 30", r0.Conditions.OlderThan)
+	if r0.Conditions.OlderThan == nil || *r0.Conditions.OlderThan != "30d" {
+		t.Errorf("rules[0].conditions.olderThan = %v, want 30d", r0.Conditions.OlderThan)
 	}
 	if r0.Conditions.Source == nil || *r0.Conditions.Source != "rss" {
 		t.Errorf("rules[0].conditions.source = %v, want rss", r0.Conditions.Source)
@@ -81,8 +81,8 @@ func TestLoad_ValidMinimal(t *testing.T) {
 	if r.Conditions == nil {
 		t.Fatal("rules[0].conditions is nil")
 	}
-	if r.Conditions.OlderThan == nil || *r.Conditions.OlderThan != 30 {
-		t.Errorf("rules[0].conditions.olderThan = %v, want 30", r.Conditions.OlderThan)
+	if r.Conditions.OlderThan == nil || *r.Conditions.OlderThan != "30d" {
+		t.Errorf("rules[0].conditions.olderThan = %v, want 30d", r.Conditions.OlderThan)
 	}
 	if r.Action != "archive" {
 		t.Errorf("rules[0].action = %q, want %q", r.Action, "archive")
@@ -142,7 +142,10 @@ func TestLoad_UnknownFieldNested(t *testing.T) {
 func TestLoad_WrongType(t *testing.T) {
 	_, err := config.Load("testdata/wrong_type.yaml")
 	if err == nil {
-		t.Fatal("expected error for wrong type, got nil")
+		t.Fatal("expected error for invalid duration, got nil")
+	}
+	if !strings.Contains(err.Error(), "invalid duration") {
+		t.Errorf("error should mention invalid duration, got: %s", err)
 	}
 }
 

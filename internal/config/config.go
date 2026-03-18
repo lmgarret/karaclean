@@ -26,7 +26,7 @@ type Rule struct {
 // All non-nil fields must match (AND semantics).
 // Pointer types distinguish absent fields (nil) from zero-value fields.
 type Conditions struct {
-	OlderThan  *int    `yaml:"olderThan"`
+	OlderThan  *string `yaml:"olderThan"`
 	Source     *string `yaml:"source"`
 	Archived   *bool   `yaml:"archived"`
 	Favourited *bool   `yaml:"favourited"`

@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"strings"
+
+	"github.com/lm/karaclean/internal/duration"
 )
 
 // ValidationError represents a single validation error with a field path
@@ -90,12 +92,14 @@ func (c *Config) Validate() []ValidationError {
 				})
 			}
 
-			// Validate olderThan is positive
-			if rule.Conditions.OlderThan != nil && *rule.Conditions.OlderThan <= 0 {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".conditions.olderThan",
-					Message: "must be a positive number of days",
-				})
+			// Validate olderThan is a valid duration string
+			if rule.Conditions.OlderThan != nil {
+				if _, err := duration.Parse(*rule.Conditions.OlderThan); err != nil {
+					errs = append(errs, ValidationError{
+						Field:   prefix + ".conditions.olderThan",
+						Message: err.Error(),
+					})
+				}
 			}
 		}
 	}

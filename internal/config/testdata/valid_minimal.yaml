@@ -1,4 +1,4 @@
 rules:
   - conditions:
-      olderThan: 30
+      olderThan: "30d"
     action: archive

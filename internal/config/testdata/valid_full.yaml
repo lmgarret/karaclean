@@ -3,7 +3,7 @@ schedule: "0 3 * * *"
 rules:
   - name: old-rss-cleanup
     conditions:
-      olderThan: 30
+      olderThan: "30d"
       source: rss
     unless:
       favourited: true
@@ -11,7 +11,7 @@ rules:
 
   - name: delete-ancient-archived
     conditions:
-      olderThan: 90
+      olderThan: "90d"
       archived: true
     unless:
       hasTag: keep-forever

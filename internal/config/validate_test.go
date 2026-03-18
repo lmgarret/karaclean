@@ -12,7 +12,7 @@ import (
 func validConfig() config.Config {
 	return config.Config{
 		Rules: []config.Rule{{
-			Conditions: &config.Conditions{OlderThan: intPtr(30)},
+			Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 			Action:     "archive",
 		}},
 	}
@@ -56,7 +56,7 @@ func TestValidate(t *testing.T) {
 			name: "missing action",
 			cfg: config.Config{
 				Rules: []config.Rule{{
-					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "",
 				}},
 			},
@@ -66,7 +66,7 @@ func TestValidate(t *testing.T) {
 			name: "invalid action",
 			cfg: config.Config{
 				Rules: []config.Rule{{
-					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "remove",
 				}},
 			},
@@ -76,7 +76,7 @@ func TestValidate(t *testing.T) {
 			name: "valid action archive",
 			cfg: config.Config{
 				Rules: []config.Rule{{
-					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "archive",
 				}},
 			},
@@ -85,7 +85,7 @@ func TestValidate(t *testing.T) {
 			name: "valid action delete",
 			cfg: config.Config{
 				Rules: []config.Rule{{
-					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "delete",
 				}},
 			},
@@ -134,29 +134,66 @@ func TestValidate(t *testing.T) {
 			cfg: config.Config{
 				Rules: []config.Rule{{
 					Action:     "archive",
-					Conditions: &config.Conditions{OlderThan: intPtr(-1)},
+					Conditions: &config.Conditions{OlderThan: strPtr("-1d")},
 				}},
 			},
-			wantErr: []string{"rules[0].conditions.olderThan: must be a positive"},
+			wantErr: []string{"invalid duration"},
 		},
 		{
 			name: "zero olderThan",
 			cfg: config.Config{
 				Rules: []config.Rule{{
 					Action:     "archive",
-					Conditions: &config.Conditions{OlderThan: intPtr(0)},
+					Conditions: &config.Conditions{OlderThan: strPtr("0d")},
 				}},
 			},
-			wantErr: []string{"rules[0].conditions.olderThan: must be a positive"},
 		},
 		{
-			name: "valid olderThan 1",
+			name: "valid olderThan 1 day",
 			cfg: config.Config{
 				Rules: []config.Rule{{
 					Action:     "archive",
-					Conditions: &config.Conditions{OlderThan: intPtr(1)},
+					Conditions: &config.Conditions{OlderThan: strPtr("1d")},
 				}},
 			},
+		},
+		{
+			name: "valid olderThan weeks",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("2w")},
+				}},
+			},
+		},
+		{
+			name: "valid olderThan months",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("1mo")},
+				}},
+			},
+		},
+		{
+			name: "invalid olderThan format",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("thirty")},
+				}},
+			},
+			wantErr: []string{"invalid duration"},
+		},
+		{
+			name: "invalid olderThan unit",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: strPtr("30m")},
+				}},
+			},
+			wantErr: []string{"invalid duration"},
 		},
 		{
 			name: "multiple errors same rule",
@@ -175,7 +212,7 @@ func TestValidate(t *testing.T) {
 			name: "multiple errors across rules",
 			cfg: config.Config{
 				Rules: []config.Rule{
-					{Action: "bad", Conditions: &config.Conditions{OlderThan: intPtr(30)}},
+					{Action: "bad", Conditions: &config.Conditions{OlderThan: strPtr("30d")}},
 					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("bad")}},
 				},
 			},
@@ -237,7 +274,7 @@ func TestLoad_ValidationIntegration(t *testing.T) {
 	dir := t.TempDir()
 	yamlContent := `rules:
   - conditions:
-      olderThan: 30
+      olderThan: "30d"
     action: remove
 `
 	path := filepath.Join(dir, "invalid.yaml")
