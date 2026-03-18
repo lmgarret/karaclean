@@ -26,9 +26,9 @@ func TestCheckAuth_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	if err := client.CheckAuth(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -42,9 +42,9 @@ func TestCheckAuth_Unauthorized(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "bad-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "bad-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	err = client.CheckAuth(context.Background())
 	if err == nil {
@@ -57,9 +57,9 @@ func TestCheckAuth_Unauthorized(t *testing.T) {
 }
 
 func TestCheckAuth_NetworkError(t *testing.T) {
-	client, err := karakeep.NewClient("http://127.0.0.1:1", "any-token")
+	client, err := karakeep.NewKarakeepClient("http://127.0.0.1:1", "any-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	err = client.CheckAuth(context.Background())
 	if err == nil {
@@ -76,9 +76,9 @@ func TestCheckAuth_UnexpectedStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	err = client.CheckAuth(context.Background())
 	if err == nil {
@@ -136,9 +136,9 @@ func TestListBookmarks_SinglePage(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	results, err := client.ListBookmarks(context.Background())
 	if err != nil {
@@ -182,9 +182,9 @@ func TestListBookmarks_Pagination(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	results, err := client.ListBookmarks(context.Background())
 	if err != nil {
@@ -202,9 +202,9 @@ func TestListBookmarks_Empty(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	results, err := client.ListBookmarks(context.Background())
 	if err != nil {
@@ -224,9 +224,9 @@ func TestListBookmarks_ErrorStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := karakeep.NewClient(srv.URL, "test-token")
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
 	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+		t.Fatalf("NewKarakeepClient: %v", err)
 	}
 	_, err = client.ListBookmarks(context.Background())
 	if err == nil {

@@ -1,0 +1,5 @@
+package: karakeep
+output: client.gen.go
+generate:
+  models: true
+  client: true
