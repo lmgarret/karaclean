@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Config Loading and Validation** - YAML config parsing with strict unknown-field rejection and semantic validation
 - [x] **Phase 2: API Client and Authentication** - Karakeep HTTP client with typed responses and startup auth verification
-- [ ] **Phase 3: Age and Source Conditions** - Matcher foundation with time-based and source-based bookmark filtering
+- [x] **Phase 3: Age and Source Conditions** - Matcher foundation with time-based and source-based bookmark filtering (completed 2026-03-18)
 - [ ] **Phase 4: Status and Tag Conditions** - Archived, favourited, and tag-based condition matching
 - [ ] **Phase 5: Exception Evaluation** - Protection clauses that prevent rules from acting on bookmarks the user cares about
 - [ ] **Phase 6: Actions and Dry-Run** - Archive and delete mutations with dry-run mode that blocks all changes
@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Config Loading and Validation | 0/2 | Planning complete | - |
 | 2. API Client and Authentication | 0/3 | Planning complete | - |
-| 3. Age and Source Conditions | 0/2 | Planning complete | - |
+| 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
 | 4. Status and Tag Conditions | 0/0 | Not started | - |
 | 5. Exception Evaluation | 0/0 | Not started | - |
 | 6. Actions and Dry-Run | 0/0 | Not started | - |
