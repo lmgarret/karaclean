@@ -1,181 +1,268 @@
 package config_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/lm/karaclean/internal/config"
 )
 
-func TestValidate_ValidConfig(t *testing.T) {
-	cfg := config.Config{
+func validConfig() config.Config {
+	return config.Config{
 		Rules: []config.Rule{{
 			Conditions: &config.Conditions{OlderThan: intPtr(30)},
 			Action:     "archive",
 		}},
 	}
-	errs := cfg.Validate()
-	if len(errs) != 0 {
-		t.Errorf("expected 0 errors, got %d: %v", len(errs), errs)
-	}
 }
 
-func TestValidate_NoRules(t *testing.T) {
-	cfg := config.Config{}
-	errs := cfg.Validate()
-	if len(errs) == 0 {
-		t.Fatal("expected error for no rules, got none")
-	}
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules" && strings.Contains(e.Message, "at least one rule required") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about 'at least one rule required' with Field='rules', got: %v", errs)
-	}
-}
-
-func TestValidate_MissingAction(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: &config.Conditions{OlderThan: intPtr(30)},
-			Action:     "",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules[0]" && strings.Contains(e.Message, `missing required field "action"`) {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about missing action at rules[0], got: %v", errs)
-	}
-}
-
-func TestValidate_InvalidAction(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: &config.Conditions{OlderThan: intPtr(30)},
-			Action:     "remove",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules[0].action" && strings.Contains(e.Message, `invalid value "remove"`) && strings.Contains(e.Message, "must be archive or delete") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about invalid action 'remove' at rules[0].action, got: %v", errs)
-	}
-}
-
-func TestValidate_MissingConditions(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: nil,
-			Action:     "archive",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules[0]" && strings.Contains(e.Message, `missing required field "conditions"`) {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about missing conditions at rules[0], got: %v", errs)
-	}
-}
-
-func TestValidate_EmptyConditions(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: &config.Conditions{},
-			Action:     "archive",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules[0].conditions" && strings.Contains(e.Message, "at least one condition required") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about empty conditions at rules[0].conditions, got: %v", errs)
-	}
-}
-
-func TestValidate_InvalidSource(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: &config.Conditions{Source: strPtr("feed")},
-			Action:     "archive",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if e.Field == "rules[0].conditions.source" && strings.Contains(e.Message, `invalid value "feed"`) {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about invalid source 'feed', got: %v", errs)
-	}
-}
-
-func TestValidate_NegativeOlderThan(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{{
-			Conditions: &config.Conditions{OlderThan: intPtr(-1)},
-			Action:     "archive",
-		}},
-	}
-	errs := cfg.Validate()
-	found := false
-	for _, e := range errs {
-		if strings.Contains(e.Field, "olderThan") && strings.Contains(e.Message, "must be a positive") {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected error about negative olderThan, got: %v", errs)
-	}
-}
-
-func TestValidate_MultipleErrors(t *testing.T) {
-	cfg := config.Config{
-		Rules: []config.Rule{
-			{Action: "remove", Conditions: nil},
-			{Action: "archive", Conditions: &config.Conditions{Source: strPtr("feed")}},
+func TestValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		cfg     config.Config
+		wantErr []string // expected substrings in error outputs; empty means no errors
+	}{
+		{
+			name: "valid minimal",
+			cfg:  validConfig(),
+		},
+		{
+			name: "valid with all source values",
+			cfg: config.Config{
+				Rules: []config.Rule{
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("rss")}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("web")}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("api")}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("mobile")}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("extension")}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("cli")}},
+					{Action: "delete", Conditions: &config.Conditions{Source: strPtr("import")}},
+				},
+			},
+		},
+		{
+			name:    "empty rules",
+			cfg:     config.Config{Rules: []config.Rule{}},
+			wantErr: []string{"rules: at least one rule required"},
+		},
+		{
+			name:    "nil rules",
+			cfg:     config.Config{},
+			wantErr: []string{"rules: at least one rule required"},
+		},
+		{
+			name: "missing action",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Action:     "",
+				}},
+			},
+			wantErr: []string{`rules[0]: missing required field "action"`},
+		},
+		{
+			name: "invalid action",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Action:     "remove",
+				}},
+			},
+			wantErr: []string{`rules[0].action: invalid value "remove"`},
+		},
+		{
+			name: "valid action archive",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Action:     "archive",
+				}},
+			},
+		},
+		{
+			name: "valid action delete",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: intPtr(30)},
+					Action:     "delete",
+				}},
+			},
+		},
+		{
+			name: "missing conditions",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: nil,
+				}},
+			},
+			wantErr: []string{`rules[0]: missing required field "conditions"`},
+		},
+		{
+			name: "empty conditions",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{},
+				}},
+			},
+			wantErr: []string{"rules[0].conditions: at least one condition required"},
+		},
+		{
+			name: "invalid source",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{Source: strPtr("feed")},
+				}},
+			},
+			wantErr: []string{`rules[0].conditions.source: invalid value "feed"`},
+		},
+		{
+			name: "valid source rss",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{Source: strPtr("rss")},
+				}},
+			},
+		},
+		{
+			name: "negative olderThan",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: intPtr(-1)},
+				}},
+			},
+			wantErr: []string{"rules[0].conditions.olderThan: must be a positive"},
+		},
+		{
+			name: "zero olderThan",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: intPtr(0)},
+				}},
+			},
+			wantErr: []string{"rules[0].conditions.olderThan: must be a positive"},
+		},
+		{
+			name: "valid olderThan 1",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "archive",
+					Conditions: &config.Conditions{OlderThan: intPtr(1)},
+				}},
+			},
+		},
+		{
+			name: "multiple errors same rule",
+			cfg: config.Config{
+				Rules: []config.Rule{{
+					Action:     "remove",
+					Conditions: nil,
+				}},
+			},
+			wantErr: []string{
+				`rules[0]: missing required field "conditions"`,
+				`rules[0].action: invalid value "remove"`,
+			},
+		},
+		{
+			name: "multiple errors across rules",
+			cfg: config.Config{
+				Rules: []config.Rule{
+					{Action: "bad", Conditions: &config.Conditions{OlderThan: intPtr(30)}},
+					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("bad")}},
+				},
+			},
+			wantErr: []string{
+				"rules[0].action",
+				"rules[1].conditions.source",
+			},
 		},
 	}
-	errs := cfg.Validate()
-	if len(errs) < 3 {
-		t.Errorf("expected at least 3 errors (invalid action, missing conditions, invalid source), got %d: %v", len(errs), errs)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := tt.cfg.Validate()
+
+			if len(tt.wantErr) == 0 {
+				if len(errs) != 0 {
+					t.Errorf("expected 0 errors, got %d: %v", len(errs), errs)
+				}
+				return
+			}
+
+			// Collect all error strings
+			var errStrs []string
+			for _, e := range errs {
+				errStrs = append(errStrs, e.Error())
+			}
+			allErrs := strings.Join(errStrs, "\n")
+
+			for _, want := range tt.wantErr {
+				if !strings.Contains(allErrs, want) {
+					t.Errorf("expected error containing %q, got errors:\n%s", want, allErrs)
+				}
+			}
+		})
 	}
 }
 
 func TestValidationErrors_Error(t *testing.T) {
 	ve := &config.ValidationErrors{
 		Errors: []config.ValidationError{
-			{Field: "rules[0].action", Message: `invalid value "remove"`},
-			{Field: "rules[1].conditions.source", Message: `invalid value "feed"`},
+			{Field: "rules[0].action", Message: `invalid value "remove" (must be archive or delete)`},
+			{Field: "rules[1].conditions.source", Message: `invalid value "feed" (must be rss, web, api, mobile, extension, cli, import)`},
 		},
 	}
 	out := ve.Error()
-	if !strings.HasPrefix(out, "config validation failed:") {
-		t.Errorf("expected output to start with 'config validation failed:', got: %s", out)
+
+	if !strings.HasPrefix(out, "config validation failed:\n") {
+		t.Errorf("expected output to start with 'config validation failed:\\n', got:\n%s", out)
 	}
-	if !strings.Contains(out, "  - ") {
-		t.Errorf("expected '  - ' prefixed lines, got: %s", out)
+	if !strings.Contains(out, "  - rules[0].action:") {
+		t.Errorf("expected '  - rules[0].action:' line, got:\n%s", out)
+	}
+	if !strings.Contains(out, "  - rules[1].conditions.source:") {
+		t.Errorf("expected '  - rules[1].conditions.source:' line, got:\n%s", out)
+	}
+}
+
+func TestLoad_ValidationIntegration(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `rules:
+  - conditions:
+      olderThan: 30
+    action: remove
+`
+	path := filepath.Join(dir, "invalid.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	_, err := config.Load(path)
+	if err == nil {
+		t.Fatal("expected error for invalid action, got nil")
+	}
+	if !strings.Contains(err.Error(), "config validation failed") {
+		t.Errorf("expected 'config validation failed' in error, got: %s", err)
+	}
+	if !strings.Contains(err.Error(), `invalid value "remove"`) {
+		t.Errorf("expected 'invalid value \"remove\"' in error, got: %s", err)
+	}
+}
+
+func TestLoad_ValidConfigStillWorks(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_full.yaml")
+	if err != nil {
+		t.Fatalf("expected valid_full.yaml to pass validation, got error: %v", err)
+	}
+	if len(cfg.Rules) != 2 {
+		t.Errorf("expected 2 rules, got %d", len(cfg.Rules))
 	}
 }
