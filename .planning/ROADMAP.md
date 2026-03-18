@@ -145,10 +145,24 @@ Plans:
 - [ ] 08-01-PLAN.md -- Config validation for schedule and timezone with robfig/cron v3 dependency
 - [ ] 08-02-PLAN.md -- Daemon loop with signal handling, Dockerfile, docker-compose, example config
 
+### Phase 9: Documentation: extensive README, CLI and Docker image usage docs
+**Goal:** A new user reading only the README can install, configure, and run Karaclean as a Docker sidecar with custom cleanup rules
+**Depends on:** Phase 8
+**Requirements**: None (documentation-only phase)
+**Success Criteria** (what must be TRUE):
+  1. README.md documents every config field, condition, exception, and action with types, defaults, and examples
+  2. README.md documents all CLI flags, environment variables, and config path resolution order
+  3. README.md shows Docker and docker-compose usage with concrete, copy-pasteable examples
+  4. Documentation is verified accurate against source code (no stale or incorrect information)
+**Plans**: 1 plan
+
+Plans:
+- [ ] 09-01-PLAN.md -- Comprehensive README.md with config reference, CLI docs, Docker usage, rule examples
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -160,3 +174,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 6. Actions and Dry-Run | 2/2 | Complete   | 2026-03-18 |
 | 7. Run Orchestrator and Observability | 2/2 | Complete   | 2026-03-18 |
 | 8. Scheduler and Deployment | 1/2 | In Progress|  |
+| 9. Documentation | 0/1 | Planning complete | - |
