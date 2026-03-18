@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"strings"
 	"time"
 
 	"github.com/lm/karaclean/internal/config"
@@ -63,4 +64,41 @@ func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time) bool
 	}
 
 	return true
+}
+
+// MatchesExceptions returns true if the bookmark is protected by any exception clause (OR semantics).
+// Short-circuits on first match. Returns false for nil Exceptions.
+func MatchesExceptions(b Bookmark, ex *config.Exceptions) bool {
+	if ex == nil {
+		return false
+	}
+
+	if ex.Favourited != nil {
+		if b.Favourited == *ex.Favourited {
+			return true
+		}
+	}
+
+	if ex.HasTag != nil {
+		for _, tag := range b.Tags {
+			if tag == *ex.HasTag {
+				return true
+			}
+		}
+	}
+
+	if ex.HasNote != nil {
+		hasNote := strings.TrimSpace(b.Note) != ""
+		if *ex.HasNote == hasNote {
+			return true
+		}
+	}
+
+	if ex.Archived != nil {
+		if b.Archived == *ex.Archived {
+			return true
+		}
+	}
+
+	return false
 }
