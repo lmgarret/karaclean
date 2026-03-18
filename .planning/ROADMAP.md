@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Age and Source Conditions** - Matcher foundation with time-based and source-based bookmark filtering (completed 2026-03-18)
 - [x] **Phase 4: Status and Tag Conditions** - Archived, favourited, and tag-based condition matching (completed 2026-03-18)
 - [ ] **Phase 5: Exception Evaluation** - Protection clauses that prevent rules from acting on bookmarks the user cares about
-- [ ] **Phase 6: Actions and Dry-Run** - Archive and delete mutations with dry-run mode that blocks all changes
+- [x] **Phase 6: Actions and Dry-Run** - Archive and delete mutations with dry-run mode that blocks all changes (completed 2026-03-18)
 - [ ] **Phase 7: Run Orchestrator and Observability** - Collect-then-act execution loop with structured run summaries
 - [ ] **Phase 8: Scheduler and Deployment** - Cron-based daemon with timezone support, Docker image, and compose example
 
@@ -157,6 +157,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
 | 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
 | 5. Exception Evaluation | 1/2 | In Progress|  |
-| 6. Actions and Dry-Run | 0/2 | Planning complete | - |
+| 6. Actions and Dry-Run | 2/2 | Complete   | 2026-03-18 |
 | 7. Run Orchestrator and Observability | 0/0 | Not started | - |
 | 8. Scheduler and Deployment | 0/0 | Not started | - |

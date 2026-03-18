@@ -31,7 +31,7 @@
 
 - [ ] **ACTN-01**: Rules can archive bookmarks (`archived: true` via Karakeep PATCH API)
 - [ ] **ACTN-02**: Rules can permanently delete bookmarks (Karakeep DELETE API)
-- [ ] **ACTN-03**: Dry-run mode logs all intended actions without executing any mutations
+- [x] **ACTN-03**: Dry-run mode logs all intended actions without executing any mutations
 
 ### Scheduling (SCHED)
 
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXCP-04 | Phase 5: Exception Evaluation | Complete |
 | ACTN-01 | Phase 6: Actions and Dry-Run | Pending |
 | ACTN-02 | Phase 6: Actions and Dry-Run | Pending |
-| ACTN-03 | Phase 6: Actions and Dry-Run | Pending |
+| ACTN-03 | Phase 6: Actions and Dry-Run | Complete |
 | OBS-01  | Phase 7: Run Orchestrator and Observability | Pending |
 | SCHED-01 | Phase 8: Scheduler and Deployment | Pending |
 | SCHED-02 | Phase 8: Scheduler and Deployment | Pending |
