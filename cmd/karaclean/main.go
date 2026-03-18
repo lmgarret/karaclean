@@ -6,10 +6,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
+	_ "time/tzdata"
 
 	"github.com/lm/karaclean/internal/config"
 	"github.com/lm/karaclean/internal/engine"
 	"github.com/lm/karaclean/internal/karakeep"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -65,13 +70,55 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Step 5: Execute rules (single run)
-	summary, err := engine.Run(context.Background(), client, cfg.Rules, dryRun)
+	// Step 5: Resolve timezone
+	loc := time.UTC
+	if cfg.Timezone != "" {
+		loc, _ = time.LoadLocation(cfg.Timezone) // already validated by config.Validate()
+	} else {
+		log.Println("WARNING: timezone not set, defaulting to UTC")
+	}
+
+	// Step 6: Create signal-aware context
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
+	// Step 7: Run immediately at startup (synchronous, before cron starts)
+	summary, err := engine.Run(ctx, client, cfg.Rules, dryRun)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 	log.Printf("run complete: %s", summary)
+
+	// Step 8: Set up cron scheduler
+	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	c := cron.New(
+		cron.WithParser(parser),
+		cron.WithLocation(loc),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
+	)
+	c.AddFunc(cfg.Schedule, func() {
+		summary, err := engine.Run(ctx, client, cfg.Rules, dryRun)
+		if err != nil {
+			log.Printf("error: %v", err)
+			return
+		}
+		log.Printf("run complete: %s", summary)
+	})
+
+	c.Start()
+	entries := c.Entries()
+	if len(entries) > 0 {
+		log.Printf("next run at %s", entries[0].Next.Format(time.RFC3339))
+	}
+
+	// Step 9: Block until signal
+	<-ctx.Done()
+	log.Println("received signal, shutting down")
+
+	// Step 10: Graceful stop -- wait for in-progress job to finish
+	stopCtx := c.Stop()
+	<-stopCtx.Done()
 }
 
 // requireEnv returns the value of the named environment variable,
