@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User receives a clear startup error if the YAML contains a misspelled or unknown field (strict parsing rejects silent misconfiguration)
   3. User receives a clear startup error if the config is semantically invalid (e.g., missing required fields, invalid enum values for source or action)
   4. Go module is initialized with project structure (`cmd/karaclean/`, `internal/config/`) and the config types compile
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Go module init, config types, Load() with strict parsing, tests
+- [ ] 01-02-PLAN.md -- Semantic validation with collected errors, validation tests
 
 ### Phase 2: API Client and Authentication
 **Goal**: The application can communicate with Karakeep and confirms a valid connection before doing any work
@@ -151,7 +151,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Config Loading and Validation | 0/0 | Not started | - |
+| 1. Config Loading and Validation | 0/2 | Planning complete | - |
 | 2. API Client and Authentication | 0/0 | Not started | - |
 | 3. Age and Source Conditions | 0/0 | Not started | - |
 | 4. Status and Tag Conditions | 0/0 | Not started | - |
