@@ -3,8 +3,10 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lm/karaclean/internal/duration"
+	"github.com/robfig/cron/v3"
 )
 
 // ValidationError represents a single validation error with a field path
@@ -40,6 +42,23 @@ var validSources = []string{"rss", "web", "api", "mobile", "extension", "cli", "
 // Returns nil if the config is valid.
 func (c *Config) Validate() []ValidationError {
 	var errs []ValidationError
+
+	// Validate schedule field (SCHED-01)
+	if c.Schedule == "" {
+		errs = append(errs, ValidationError{Field: "schedule", Message: "schedule is required"})
+	} else {
+		parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+		if _, err := parser.Parse(c.Schedule); err != nil {
+			errs = append(errs, ValidationError{Field: "schedule", Message: fmt.Sprintf("invalid cron expression: %v", err)})
+		}
+	}
+
+	// Validate timezone field (SCHED-02) — empty is valid (defaults to UTC at runtime)
+	if c.Timezone != "" {
+		if _, err := time.LoadLocation(c.Timezone); err != nil {
+			errs = append(errs, ValidationError{Field: "timezone", Message: fmt.Sprintf("invalid timezone: %v", err)})
+		}
+	}
 
 	if len(c.Rules) == 0 {
 		errs = append(errs, ValidationError{
