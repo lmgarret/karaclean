@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/lm/karaclean/internal/config"
+	"github.com/lm/karaclean/internal/engine"
 	"github.com/lm/karaclean/internal/karakeep"
 )
 
@@ -64,7 +65,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("authenticated successfully")
+	// Step 5: Execute rules (single run)
+	summary, err := engine.Run(context.Background(), client, cfg.Rules, dryRun)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	log.Printf("run complete: %s", summary)
 }
 
 // requireEnv returns the value of the named environment variable,
