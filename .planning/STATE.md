@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-18T16:59:58.868Z"
-last_activity: 2026-03-18 -- Completed plan 07-02 (wire main.go CLI path)
+status: executing
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-18T17:22:02.650Z"
+last_activity: 2026-03-18 -- Completed plan 08-01 (schedule and timezone config validation)
 progress:
   total_phases: 8
-  completed_phases: 7
-  total_plans: 15
-  completed_plans: 15
+  completed_phases: 8
+  total_plans: 17
+  completed_plans: 17
   percent: 100
 ---
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 07 P01 | 2min | 2 tasks | 2 files |
 | Phase 07 P02 | 1min | 1 tasks | 1 files |
 | Phase 08 P01 | 4min | 2 tasks | 7 files |
+| Phase 08 P02 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - [Phase 07]: context.Background() used since no signal handling yet (Phase 8 will add cancellation)
 - [Phase 08]: 5-field cron only via explicit cron.NewParser descriptor (no seconds field)
 - [Phase 08]: Empty timezone passes validation -- defaults to UTC at runtime (not at validation time)
+- [Phase 08]: Embedded timezone database via time/tzdata for scratch images
+- [Phase 08]: Run-on-start executes synchronously before cron.Start() for early error detection
+- [Phase 08]: SkipIfStillRunning prevents overlapping cron runs
 
 ### Pending Todos
 
@@ -111,6 +115,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:17:35Z
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-scheduler-and-deployment/08-01-SUMMARY.md
+Last session: 2026-03-18T17:22:02.644Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None

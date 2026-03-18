@@ -37,7 +37,7 @@
 
 - [x] **SCHED-01**: User defines a cron schedule expression in YAML config
 - [x] **SCHED-02**: User defines explicit timezone in config (defaults to UTC with a startup warning if unset)
-- [ ] **SCHED-03**: Container runs as a daemon executing rules on the defined schedule
+- [x] **SCHED-03**: Container runs as a daemon executing rules on the defined schedule
 
 ### Observability (OBS)
 
@@ -99,7 +99,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OBS-01  | Phase 7: Run Orchestrator and Observability | Complete |
 | SCHED-01 | Phase 8: Scheduler and Deployment | Complete |
 | SCHED-02 | Phase 8: Scheduler and Deployment | Complete |
-| SCHED-03 | Phase 8: Scheduler and Deployment | Pending |
+| SCHED-03 | Phase 8: Scheduler and Deployment | Complete |
 
 **Coverage:**
 - v1 requirements: 20 total
