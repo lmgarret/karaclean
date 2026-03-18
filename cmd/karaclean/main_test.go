@@ -44,6 +44,35 @@ func TestRequireEnv(t *testing.T) {
 	})
 }
 
+func TestResolveDryRun(t *testing.T) {
+	tests := []struct {
+		name      string
+		flagSet   bool
+		flagVal   bool
+		envVal    string
+		configVal bool
+		want      bool
+	}{
+		{"flag true wins over all", true, true, "", false, true},
+		{"flag true wins over env false", true, true, "false", false, true},
+		{"flag false wins over env true", true, false, "true", true, false},
+		{"env true wins over config false", false, false, "true", false, true},
+		{"env 1 is truthy", false, false, "1", false, true},
+		{"env false overrides config true", false, false, "false", true, false},
+		{"config true as fallback", false, false, "", true, true},
+		{"default is false", false, false, "", false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveDryRun(tt.flagSet, tt.flagVal, tt.envVal, tt.configVal)
+			if got != tt.want {
+				t.Errorf("resolveDryRun(%v, %v, %q, %v) = %v, want %v",
+					tt.flagSet, tt.flagVal, tt.envVal, tt.configVal, got, tt.want)
+			}
+		})
+	}
+}
+
 // containsStr is a helper to avoid importing strings in test file.
 func containsStr(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
