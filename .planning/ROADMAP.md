@@ -123,11 +123,11 @@ Plans:
   1. A single run paginates all bookmarks into memory first, evaluates all rules, then executes mutations as a separate phase (collect-then-act pattern prevents pagination race conditions)
   2. Each run produces a structured log summary showing counts: archived N, deleted M, skipped K, errors E
   3. The application can be invoked for a single run (not just as a daemon) for testing and manual use
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- TDD: Run() orchestrator with RunSummary struct, collect-then-act, first-match-wins
+- [ ] 07-02-PLAN.md -- Wire main.go to call engine.Run() after auth, log summary, exit
 
 ### Phase 8: Scheduler and Deployment
 **Goal**: Karaclean runs as a production Docker sidecar on a user-defined cron schedule
@@ -158,5 +158,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
 | 5. Exception Evaluation | 1/2 | In Progress|  |
 | 6. Actions and Dry-Run | 2/2 | Complete   | 2026-03-18 |
-| 7. Run Orchestrator and Observability | 0/0 | Not started | - |
+| 7. Run Orchestrator and Observability | 0/2 | Planning complete | - |
 | 8. Scheduler and Deployment | 0/0 | Not started | - |
