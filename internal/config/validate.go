@@ -101,6 +101,22 @@ func (c *Config) Validate() []ValidationError {
 					})
 				}
 			}
+
+			// Validate hasTag is non-empty
+			if rule.Conditions.HasTag != nil && *rule.Conditions.HasTag == "" {
+				errs = append(errs, ValidationError{
+					Field:   prefix + ".conditions.hasTag",
+					Message: "must not be empty",
+				})
+			}
+
+			// Validate lacksTag is non-empty
+			if rule.Conditions.LacksTag != nil && *rule.Conditions.LacksTag == "" {
+				errs = append(errs, ValidationError{
+					Field:   prefix + ".conditions.lacksTag",
+					Message: "must not be empty",
+				})
+			}
 		}
 	}
 
