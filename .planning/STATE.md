@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 7 complete -- run orchestrator and observability
+**Current focus:** Phase 8 in progress -- scheduler and deployment
 
 ## Current Position
 
-Phase: 7 of 8 (Run Orchestrator and Observability)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-03-18 -- Completed plan 07-02 (wire main.go CLI path)
+Phase: 8 of 8 (Scheduler and Deployment)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-18 -- Completed plan 08-01 (schedule and timezone config validation)
 
 Progress: [██████████] 100%
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 | Phase 06 P01 | 2min | 2 tasks | 6 files |
 | Phase 07 P01 | 2min | 2 tasks | 2 files |
 | Phase 07 P02 | 1min | 1 tasks | 1 files |
+| Phase 08 P01 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,8 @@ Recent decisions affecting current work:
 - [Phase 07]: No new dependencies -- Run() wires existing engine components only
 - [Phase 07]: RunSummary uses value receiver String() for idiomatic Go formatting
 - [Phase 07]: context.Background() used since no signal handling yet (Phase 8 will add cancellation)
+- [Phase 08]: 5-field cron only via explicit cron.NewParser descriptor (no seconds field)
+- [Phase 08]: Empty timezone passes validation -- defaults to UTC at runtime (not at validation time)
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T16:59:58.862Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-scheduler-and-deployment/08-CONTEXT.md
+Last session: 2026-03-18T17:17:35Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-scheduler-and-deployment/08-01-SUMMARY.md
