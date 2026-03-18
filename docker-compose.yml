@@ -1,0 +1,17 @@
+services:
+  karakeep:
+    image: ghcr.io/karakeep-app/karakeep:latest
+    ports:
+      - "3000:3000"
+    # Add your Karakeep configuration here
+
+  karaclean:
+    build: .
+    environment:
+      - KARAKEEP_URL=http://karakeep:3000
+      - KARAKEEP_API_KEY=${KARAKEEP_API_KEY}
+    volumes:
+      - ./karaclean.yaml:/config/karaclean.yaml:ro
+    depends_on:
+      - karakeep
+    restart: unless-stopped

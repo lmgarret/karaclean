@@ -1,0 +1,63 @@
+# Karaclean configuration
+# Copy this file to karaclean.yaml and adjust to your needs.
+
+# Cron schedule (required). Standard 5-field format: minute hour day month weekday.
+# Examples: "0 3 * * *" (daily at 3am), "*/30 * * * *" (every 30 min)
+schedule: "0 3 * * *"
+
+# IANA timezone for the schedule. Defaults to UTC with a warning if omitted.
+# Examples: "America/New_York", "Europe/London", "Asia/Tokyo"
+timezone: "UTC"
+
+# Dry-run mode: log intended actions without executing mutations.
+# Can also be set via --dry-run flag or KARACLEAN_DRY_RUN=true env var.
+# Precedence: flag > env > config.
+dryRun: false
+
+rules:
+  # Archive RSS bookmarks older than 30 days, unless favourited.
+  - name: archive-old-rss
+    conditions:
+      olderThan: "30d"       # Duration: Nd (days), Nw (weeks), Nmo (months), Ny (years), Nh (hours)
+      source: rss            # Values: rss, web, api, mobile, extension, cli, import
+    unless:
+      favourited: true       # Skip if bookmark is starred
+    action: archive          # Values: archive, delete
+
+  # Delete archived bookmarks older than 90 days, unless tagged or noted.
+  - name: delete-ancient-archived
+    conditions:
+      olderThan: "90d"
+      archived: true         # true = only archived, false = only non-archived
+    unless:
+      hasTag: keep-forever   # Skip if bookmark has this tag
+      hasNote: true          # Skip if bookmark has a personal note
+    action: delete
+
+  # Archive unfavourited bookmarks that lack the "keep" tag after 60 days.
+  - name: archive-stale-untagged
+    conditions:
+      olderThan: "60d"
+      favourited: false
+      lacksTag: keep         # Match bookmarks that do NOT have this tag
+    unless:
+      archived: true         # Skip if already archived
+    action: archive
+
+# All conditions (AND semantics -- all must match):
+#   olderThan: "Nd"         - bookmark created more than N days/weeks/months/years ago
+#   source: "rss"           - bookmark ingested from this source
+#   archived: true/false    - bookmark archive status
+#   favourited: true/false  - bookmark favourite/star status
+#   hasTag: "tag-name"      - bookmark has this exact tag (case-sensitive)
+#   lacksTag: "tag-name"    - bookmark does NOT have this tag (case-sensitive)
+#
+# All exceptions (OR semantics -- any match skips the bookmark):
+#   favourited: true/false  - skip if bookmark matches this star status
+#   hasTag: "tag-name"      - skip if bookmark has this tag
+#   hasNote: true/false     - skip if bookmark has/lacks a personal note
+#   archived: true/false    - skip if bookmark matches this archive status
+#
+# Actions:
+#   archive - set archived: true via Karakeep API
+#   delete  - permanently remove via Karakeep API
