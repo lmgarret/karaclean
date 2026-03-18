@@ -12,8 +12,8 @@ Karaclean delivers a Docker sidecar that automatically archives and deletes Kara
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Config Loading and Validation** - YAML config parsing with strict unknown-field rejection and semantic validation
-- [ ] **Phase 2: API Client and Authentication** - Karakeep HTTP client with typed responses and startup auth verification
+- [x] **Phase 1: Config Loading and Validation** - YAML config parsing with strict unknown-field rejection and semantic validation
+- [x] **Phase 2: API Client and Authentication** - Karakeep HTTP client with typed responses and startup auth verification
 - [ ] **Phase 3: Age and Source Conditions** - Matcher foundation with time-based and source-based bookmark filtering
 - [ ] **Phase 4: Status and Tag Conditions** - Archived, favourited, and tag-based condition matching
 - [ ] **Phase 5: Exception Evaluation** - Protection clauses that prevent rules from acting on bookmarks the user cares about
@@ -35,8 +35,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Go module init, config types, Load() with strict parsing, tests
-- [ ] 01-02-PLAN.md -- Semantic validation with collected errors, validation tests
+- [x] 01-01-PLAN.md -- Go module init, config types, Load() with strict parsing, tests
+- [x] 01-02-PLAN.md -- Semantic validation with collected errors, validation tests
 
 ### Phase 2: API Client and Authentication
 **Goal**: The application can communicate with Karakeep and confirms a valid connection before doing any work
@@ -49,9 +49,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-00-PLAN.md -- Wave 0 test stubs: client_test.go, api_test.go, main_test.go (Nyquist compliance)
-- [ ] 02-01-PLAN.md -- oapi-codegen setup, generated client, engine types/interface, thin wrapper
-- [ ] 02-02-PLAN.md -- Verify tests GREEN, fix JSON fixtures, main.go startup wiring with TestRequireEnv
+- [x] 02-00-PLAN.md -- Wave 0 test stubs: client_test.go, api_test.go, main_test.go (Nyquist compliance)
+- [x] 02-01-PLAN.md -- oapi-codegen setup, generated client, engine types/interface, thin wrapper
+- [x] 02-02-PLAN.md -- Verify tests GREEN, fix JSON fixtures, main.go startup wiring with TestRequireEnv
 
 ### Phase 3: Age and Source Conditions
 **Goal**: Rules can identify bookmarks based on how old they are and where they came from

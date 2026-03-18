@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-18T11:09:30.520Z"
-last_activity: 2026-03-18 -- Completed plan 01-02 (config validation)
+stopped_at: Phase 2 complete
+last_updated: "2026-03-18"
+last_activity: 2026-03-18 -- Completed plan 02-02 (wire startup, all tests GREEN)
 progress:
   total_phases: 8
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 1 complete, ready for Phase 2
+**Current focus:** Phase 2 complete, ready for Phase 3
 
 ## Current Position
 
-Phase: 1 of 8 (Config Loading and Validation) -- COMPLETE
-Plan: 2 of 2 in current phase
+Phase: 2 of 8 (API Client and Authentication) -- COMPLETE
+Plan: 3 of 3 in current phase
 Status: Phase Complete
-Last activity: 2026-03-18 -- Completed plan 01-02 (config validation)
+Last activity: 2026-03-18 -- Completed plan 02-02 (wire startup, all tests GREEN)
 
 Progress: [██████████] 100%
 
@@ -67,18 +67,20 @@ Recent decisions affecting current work:
 - 01-01: No custom UnmarshalYAML methods to preserve KnownFields strict parsing
 - 01-02: Validate() returns []ValidationError slice for caller flexibility; ValidationErrors wraps for error interface
 - 01-02: Source enum values from Karakeep API: rss, web, api, mobile, extension, cli, import
+- 02-01: Wrapper named KarakeepClient (not Client) — oapi-codegen generates Client/NewClient in same package, name collision
+- 02-01: engine.Bookmark maps: Id→ID, CreatedAt string→time.Time (RFC3339), *BookmarkSource→string, *string Note→string
+- 02-02: Startup order: config.Load → requireEnv(KARAKEEP_URL) → requireEnv(KARAKEEP_API_KEY) → NewKarakeepClient → CheckAuth
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- Research gap: Karakeep API rate limiting on reads is undocumented -- monitor during Phase 2 development
-- Research gap: go.yaml.in/yaml/v4 may reach stable during development -- evaluate if it does, otherwise stay on v3
+- Pitfall (noted, not blocking): Karakeep config source validation missing "singlefile" — OpenAPI spec includes it, Phase 1 validation does not. Monitor if it causes issues in Phase 3+.
 
 ## Session Continuity
 
-Last session: 2026-03-18T11:09:30.515Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-api-client-and-authentication/02-CONTEXT.md
+Last session: 2026-03-18
+Stopped at: Phase 2 complete
+Resume file: .planning/phases/02-api-client-and-authentication/02-02-SUMMARY.md
