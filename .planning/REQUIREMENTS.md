@@ -15,8 +15,8 @@
 
 - [x] **COND-01**: Rules can match bookmarks older than N days (`olderThan` condition)
 - [x] **COND-02**: Rules can filter by source: `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`
-- [ ] **COND-03**: Rules can match on archived status (`archived: true/false`)
-- [ ] **COND-04**: Rules can match on favourited status (`favourited: true/false`)
+- [x] **COND-03**: Rules can match on archived status (`archived: true/false`)
+- [x] **COND-04**: Rules can match on favourited status (`favourited: true/false`)
 - [x] **COND-05**: Rules can match bookmarks that have a specific tag (`hasTag`)
 - [x] **COND-06**: Rules can match bookmarks that lack a specific tag (`lacksTag`)
 
@@ -85,8 +85,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONF-03 | Phase 2: API Client and Authentication | Pending |
 | COND-01 | Phase 3: Age and Source Conditions | Complete |
 | COND-02 | Phase 3: Age and Source Conditions | Complete |
-| COND-03 | Phase 4: Status and Tag Conditions | Pending |
-| COND-04 | Phase 4: Status and Tag Conditions | Pending |
+| COND-03 | Phase 4: Status and Tag Conditions | Complete |
+| COND-04 | Phase 4: Status and Tag Conditions | Complete |
 | COND-05 | Phase 4: Status and Tag Conditions | Complete |
 | COND-06 | Phase 4: Status and Tag Conditions | Complete |
 | EXCP-01 | Phase 5: Exception Evaluation | Pending |
