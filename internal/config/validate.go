@@ -118,6 +118,16 @@ func (c *Config) Validate() []ValidationError {
 				})
 			}
 		}
+
+		// Validate exceptions
+		if rule.Unless != nil {
+			if rule.Unless.HasTag != nil && *rule.Unless.HasTag == "" {
+				errs = append(errs, ValidationError{
+					Field:   prefix + ".unless.hasTag",
+					Message: "must not be empty",
+				})
+			}
+		}
 	}
 
 	return errs
