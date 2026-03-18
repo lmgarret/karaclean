@@ -13,7 +13,7 @@
 
 ### Conditions (COND)
 
-- [ ] **COND-01**: Rules can match bookmarks older than N days (`olderThan` condition)
+- [x] **COND-01**: Rules can match bookmarks older than N days (`olderThan` condition)
 - [ ] **COND-02**: Rules can filter by source: `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`
 - [ ] **COND-03**: Rules can match on archived status (`archived: true/false`)
 - [ ] **COND-04**: Rules can match on favourited status (`favourited: true/false`)
@@ -83,7 +83,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONF-01 | Phase 1: Config Loading and Validation | Complete |
 | CONF-02 | Phase 1: Config Loading and Validation | Complete |
 | CONF-03 | Phase 2: API Client and Authentication | Pending |
-| COND-01 | Phase 3: Age and Source Conditions | Pending |
+| COND-01 | Phase 3: Age and Source Conditions | Complete |
 | COND-02 | Phase 3: Age and Source Conditions | Pending |
 | COND-03 | Phase 4: Status and Tag Conditions | Pending |
 | COND-04 | Phase 4: Status and Tag Conditions | Pending |

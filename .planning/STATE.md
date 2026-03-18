@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-18T13:42:50.726Z"
-last_activity: 2026-03-18 -- Completed plan 02-02 (wire startup, all tests GREEN)
+status: in-progress
+stopped_at: Completed 03-01 (duration parser + OlderThan migration)
+last_updated: "2026-03-18T14:03:23.099Z"
+last_activity: 2026-03-18 -- Completed plan 03-01 (duration parser + OlderThan migration)
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_plans: 7
+  completed_plans: 6
+  percent: 86
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 2 complete, ready for Phase 3
+**Current focus:** Phase 3 in progress -- duration parser complete, matcher next
 
 ## Current Position
 
-Phase: 2 of 8 (API Client and Authentication) -- COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-03-18 -- Completed plan 02-02 (wire startup, all tests GREEN)
+Phase: 3 of 8 (Age and Source Conditions)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: In Progress
+Last activity: 2026-03-18 -- Completed plan 03-01 (duration parser + OlderThan migration)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████████] 100%
 *Updated after each plan completion*
 | Phase 01 P01 | 5min | 2 tasks | 11 files |
 | Phase 01 P02 | 3min | 2 tasks | 3 files |
+| Phase 03 P01 | 2min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ Recent decisions affecting current work:
 - 02-01: Wrapper named KarakeepClient (not Client) — oapi-codegen generates Client/NewClient in same package, name collision
 - 02-01: engine.Bookmark maps: Id→ID, CreatedAt string→time.Time (RFC3339), *BookmarkSource→string, *string Note→string
 - 02-02: Startup order: config.Load → requireEnv(KARAKEEP_URL) → requireEnv(KARAKEEP_API_KEY) → NewKarakeepClient → CheckAuth
+- 03-01: Duration parser in internal/duration/ (shared package) to avoid import cycle between config and engine
+- 03-01: Zero durations (0h, 0d) accepted as valid -- matches all bookmarks
+- 03-01: Fixed day counts: mo=30d, y=365d (deterministic, appropriate for GC retention)
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T13:42:50.720Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-age-and-source-conditions/03-CONTEXT.md
+Last session: 2026-03-18T14:02:44Z
+Stopped at: Completed 03-01 (duration parser + OlderThan migration)
+Resume file: .planning/phases/03-age-and-source-conditions/03-02-PLAN.md
