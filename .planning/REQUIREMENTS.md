@@ -41,7 +41,7 @@
 
 ### Observability (OBS)
 
-- [ ] **OBS-01**: Each run produces a structured log summary (archived: N, deleted: M, skipped: K, errors: E)
+- [x] **OBS-01**: Each run produces a structured log summary (archived: N, deleted: M, skipped: K, errors: E)
 
 ## v2 Requirements
 
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACTN-01 | Phase 6: Actions and Dry-Run | Complete |
 | ACTN-02 | Phase 6: Actions and Dry-Run | Complete |
 | ACTN-03 | Phase 6: Actions and Dry-Run | Complete |
-| OBS-01  | Phase 7: Run Orchestrator and Observability | Pending |
+| OBS-01  | Phase 7: Run Orchestrator and Observability | Complete |
 | SCHED-01 | Phase 8: Scheduler and Deployment | Pending |
 | SCHED-02 | Phase 8: Scheduler and Deployment | Pending |
 | SCHED-03 | Phase 8: Scheduler and Deployment | Pending |
