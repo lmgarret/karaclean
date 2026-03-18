@@ -62,11 +62,11 @@ Plans:
   2. A rule with `source: rss` matches only bookmarks ingested from RSS feeds (and similarly for web, api, mobile, extension, cli, import)
   3. Conditions compose correctly -- a rule with both `olderThan` and `source` matches only bookmarks satisfying both
   4. Matcher functions are pure (no I/O) and have comprehensive unit tests
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Duration parser package, OlderThan *int to *string migration, validation update
+- [ ] 03-02-PLAN.md -- MatchesConditions pure function with olderThan and source matching
 
 ### Phase 4: Status and Tag Conditions
 **Goal**: Rules can filter bookmarks by their archived/favourited status and tag presence
@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Config Loading and Validation | 0/2 | Planning complete | - |
 | 2. API Client and Authentication | 0/3 | Planning complete | - |
-| 3. Age and Source Conditions | 0/0 | Not started | - |
+| 3. Age and Source Conditions | 0/2 | Planning complete | - |
 | 4. Status and Tag Conditions | 0/0 | Not started | - |
 | 5. Exception Evaluation | 0/0 | Not started | - |
 | 6. Actions and Dry-Run | 0/0 | Not started | - |
