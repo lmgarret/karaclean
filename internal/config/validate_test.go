@@ -11,6 +11,7 @@ import (
 
 func validConfig() config.Config {
 	return config.Config{
+		Schedule: "0 3 * * *",
 		Rules: []config.Rule{{
 			Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 			Action:     "archive",
@@ -31,6 +32,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid with all source values",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{
 					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("rss")}},
 					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("web")}},
@@ -44,17 +46,18 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name:    "empty rules",
-			cfg:     config.Config{Rules: []config.Rule{}},
+			cfg:     config.Config{Schedule: "0 3 * * *", Rules: []config.Rule{}},
 			wantErr: []string{"rules: at least one rule required"},
 		},
 		{
 			name:    "nil rules",
-			cfg:     config.Config{},
+			cfg:     config.Config{Schedule: "0 3 * * *"},
 			wantErr: []string{"rules: at least one rule required"},
 		},
 		{
 			name: "missing action",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "",
@@ -65,6 +68,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid action",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "remove",
@@ -75,6 +79,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid action archive",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "archive",
@@ -84,6 +89,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid action delete",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Action:     "delete",
@@ -93,6 +99,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "missing conditions",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: nil,
@@ -103,6 +110,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "empty conditions",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{},
@@ -113,6 +121,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid source",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{Source: strPtr("feed")},
@@ -123,6 +132,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid source rss",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{Source: strPtr("rss")},
@@ -132,6 +142,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "negative olderThan",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("-1d")},
@@ -142,6 +153,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "zero olderThan",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("0d")},
@@ -151,6 +163,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid olderThan 1 day",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("1d")},
@@ -160,6 +173,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid olderThan weeks",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("2w")},
@@ -169,6 +183,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid olderThan months",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("1mo")},
@@ -178,6 +193,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid olderThan format",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("thirty")},
@@ -188,6 +204,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid olderThan unit",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("30m")},
@@ -198,6 +215,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "multiple errors same rule",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "remove",
 					Conditions: nil,
@@ -211,6 +229,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "multiple errors across rules",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{
 					{Action: "bad", Conditions: &config.Conditions{OlderThan: strPtr("30d")}},
 					{Action: "archive", Conditions: &config.Conditions{Source: strPtr("bad")}},
@@ -224,6 +243,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "empty hasTag rejected",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{HasTag: strPtr("")},
@@ -234,6 +254,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "empty lacksTag rejected",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{LacksTag: strPtr("")},
@@ -244,6 +265,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid hasTag passes",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{HasTag: strPtr("read-later")},
@@ -253,6 +275,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid lacksTag passes",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{LacksTag: strPtr("keep")},
@@ -262,6 +285,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "both empty hasTag and lacksTag produce two errors",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{HasTag: strPtr(""), LacksTag: strPtr("")},
@@ -275,6 +299,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "empty unless hasTag rejected",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
@@ -286,6 +311,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid unless hasTag passes",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
@@ -296,6 +322,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "nil unless passes",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
@@ -306,12 +333,55 @@ func TestValidate(t *testing.T) {
 		{
 			name: "unless with nil hasTag passes",
 			cfg: config.Config{
+				Schedule: "0 3 * * *",
 				Rules: []config.Rule{{
 					Action:     "archive",
 					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
 					Unless:     &config.Exceptions{Favourited: boolPtr(true)},
 				}},
 			},
+		},
+		// Schedule validation tests
+		{
+			name:    "missing schedule",
+			cfg:     config.Config{Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+			wantErr: []string{"schedule: schedule is required"},
+		},
+		{
+			name:    "invalid cron expression",
+			cfg:     config.Config{Schedule: "not-a-cron", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+			wantErr: []string{"schedule: invalid cron expression"},
+		},
+		{
+			name:    "six-field cron rejected",
+			cfg:     config.Config{Schedule: "0 0 3 * * *", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+			wantErr: []string{"schedule: invalid cron expression"},
+		},
+		{
+			name: "valid cron daily",
+			cfg:  config.Config{Schedule: "0 3 * * *", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+		},
+		{
+			name: "valid cron every 15 min",
+			cfg:  config.Config{Schedule: "*/15 * * * *", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+		},
+		// Timezone validation tests
+		{
+			name: "empty timezone defaults to UTC no error",
+			cfg:  config.Config{Schedule: "0 3 * * *", Timezone: "", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+		},
+		{
+			name: "valid timezone America/New_York",
+			cfg:  config.Config{Schedule: "0 3 * * *", Timezone: "America/New_York", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+		},
+		{
+			name: "valid timezone UTC",
+			cfg:  config.Config{Schedule: "0 3 * * *", Timezone: "UTC", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+		},
+		{
+			name:    "invalid timezone",
+			cfg:     config.Config{Schedule: "0 3 * * *", Timezone: "Mars/Olympus", Rules: []config.Rule{{Action: "archive", Conditions: &config.Conditions{OlderThan: strPtr("30d")}}}},
+			wantErr: []string{"timezone: invalid timezone"},
 		},
 	}
 
@@ -364,7 +434,8 @@ func TestValidationErrors_Error(t *testing.T) {
 
 func TestLoad_ValidationIntegration(t *testing.T) {
 	dir := t.TempDir()
-	yamlContent := `rules:
+	yamlContent := `schedule: "0 3 * * *"
+rules:
   - conditions:
       olderThan: "30d"
     action: remove

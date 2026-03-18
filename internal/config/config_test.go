@@ -164,6 +164,7 @@ func TestLoad_FileNotFound(t *testing.T) {
 func TestLoad_DryRunTrue(t *testing.T) {
 	dir := t.TempDir()
 	yamlContent := `dryRun: true
+schedule: "0 3 * * *"
 rules:
   - name: test
     conditions:
@@ -187,6 +188,7 @@ rules:
 func TestLoad_DryRunFalse(t *testing.T) {
 	dir := t.TempDir()
 	yamlContent := `dryRun: false
+schedule: "0 3 * * *"
 rules:
   - name: test
     conditions:
@@ -209,7 +211,8 @@ rules:
 
 func TestLoad_DryRunOmitted(t *testing.T) {
 	dir := t.TempDir()
-	yamlContent := `rules:
+	yamlContent := `schedule: "0 3 * * *"
+rules:
   - name: test
     conditions:
       source: rss
