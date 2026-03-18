@@ -7,8 +7,8 @@
 
 ### Config (CONF)
 
-- [ ] **CONF-01**: User can define rules in a YAML config file mounted into the container
-- [ ] **CONF-02**: Config validation rejects unknown fields at startup (strict YAML parsing — prevents silent misconfiguration from misspelled keys)
+- [x] **CONF-01**: User can define rules in a YAML config file mounted into the container
+- [x] **CONF-02**: Config validation rejects unknown fields at startup (strict YAML parsing — prevents silent misconfiguration from misspelled keys)
 - [ ] **CONF-03**: Container validates API token against Karakeep on startup before executing any rules
 
 ### Conditions (COND)
@@ -80,8 +80,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONF-01 | Phase 1: Config Loading and Validation | Pending |
-| CONF-02 | Phase 1: Config Loading and Validation | Pending |
+| CONF-01 | Phase 1: Config Loading and Validation | Complete |
+| CONF-02 | Phase 1: Config Loading and Validation | Complete |
 | CONF-03 | Phase 2: API Client and Authentication | Pending |
 | COND-01 | Phase 3: Age and Source Conditions | Pending |
 | COND-02 | Phase 3: Age and Source Conditions | Pending |
