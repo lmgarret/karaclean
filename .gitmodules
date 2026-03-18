@@ -1,0 +1,3 @@
+[submodule "karakeep-upstream"]
+	path = karakeep-upstream
+	url = https://github.com/karakeep-app/karakeep.git
