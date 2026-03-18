@@ -94,11 +94,11 @@ Plans:
   3. A rule with `unless: hasNote` skips any bookmark where the user has added a personal note
   4. A rule with `unless: archived` or `unless: notArchived` skips bookmarks based on their archive status
   5. Multiple exception clauses on a single rule are evaluated with OR semantics (any exception triggers a skip)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- MatchesExceptions function with OR semantics and comprehensive tests
+- [ ] 05-02-PLAN.md -- Validation: reject empty unless.hasTag strings with tests
 
 ### Phase 6: Actions and Dry-Run
 **Goal**: Rules can archive or delete bookmarks, and dry-run mode lets users preview changes safely
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. API Client and Authentication | 0/3 | Planning complete | - |
 | 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
 | 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
-| 5. Exception Evaluation | 0/0 | Not started | - |
+| 5. Exception Evaluation | 0/2 | Planning complete | - |
 | 6. Actions and Dry-Run | 0/0 | Not started | - |
 | 7. Run Orchestrator and Observability | 0/0 | Not started | - |
 | 8. Scheduler and Deployment | 0/0 | Not started | - |
