@@ -57,7 +57,7 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 				break
 			}
 			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
-		result := ExecuteAction(ctx, api, rule.Action, b.ID, rule.Name, effectiveDryRun)
+		result := ExecuteAction(ctx, api, rule.Action, b, rule.Name, effectiveDryRun)
 			if result.Err != nil {
 				summary.Errors++
 			} else {
