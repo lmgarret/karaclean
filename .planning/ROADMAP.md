@@ -1,194 +1,40 @@
 # Roadmap: Karaclean
 
-## Overview
+## Milestones
 
-Karaclean delivers a Docker sidecar that automatically archives and deletes Karakeep bookmarks based on user-defined YAML rules. The roadmap builds from config parsing and API integration through a layered rule engine (conditions, exceptions, actions), then adds the run orchestrator with collect-then-act safety, and finishes with cron scheduling and Docker packaging. Each phase delivers a testable, coherent capability that the next phase builds on.
+- ✅ **v1.0 MVP** — Phases 1–10 (shipped 2026-03-19)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>✅ v1.0 MVP (Phases 1–10) — SHIPPED 2026-03-19</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
+- [x] Phase 1: Config Loading and Validation (2/2 plans) — completed 2026-03-18
+- [x] Phase 2: API Client and Authentication (3/3 plans) — completed 2026-03-18
+- [x] Phase 3: Age and Source Conditions (2/2 plans) — completed 2026-03-18
+- [x] Phase 4: Status and Tag Conditions (2/2 plans) — completed 2026-03-18
+- [x] Phase 5: Exception Evaluation (2/2 plans) — completed 2026-03-18
+- [x] Phase 6: Actions and Dry-Run (2/2 plans) — completed 2026-03-18
+- [x] Phase 7: Run Orchestrator and Observability (2/2 plans) — completed 2026-03-18
+- [x] Phase 8: Scheduler and Deployment (2/2 plans) — completed 2026-03-19
+- [x] Phase 9: Documentation (1/1 plan) — completed 2026-03-19
+- [x] Phase 10: CI: Tests, Lint, Docker (2/2 plans) — completed 2026-03-19
 
-- [x] **Phase 1: Config Loading and Validation** - YAML config parsing with strict unknown-field rejection and semantic validation
-- [x] **Phase 2: API Client and Authentication** - Karakeep HTTP client with typed responses and startup auth verification
-- [x] **Phase 3: Age and Source Conditions** - Matcher foundation with time-based and source-based bookmark filtering (completed 2026-03-18)
-- [x] **Phase 4: Status and Tag Conditions** - Archived, favourited, and tag-based condition matching (completed 2026-03-18)
-- [ ] **Phase 5: Exception Evaluation** - Protection clauses that prevent rules from acting on bookmarks the user cares about
-- [x] **Phase 6: Actions and Dry-Run** - Archive and delete mutations with dry-run mode that blocks all changes (completed 2026-03-18)
-- [x] **Phase 7: Run Orchestrator and Observability** - Collect-then-act execution loop with structured run summaries (completed 2026-03-18)
-- [ ] **Phase 8: Scheduler and Deployment** - Cron-based daemon with timezone support, Docker image, and compose example
+Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 
-## Phase Details
-
-### Phase 1: Config Loading and Validation
-**Goal**: Users can write a YAML config file and get immediate, clear feedback if it contains errors
-**Depends on**: Nothing (first phase)
-**Requirements**: CONF-01, CONF-02
-**Success Criteria** (what must be TRUE):
-  1. User can write a YAML config file with rules containing conditions, exceptions, and actions, and the application parses it into typed Go structs
-  2. User receives a clear startup error if the YAML contains a misspelled or unknown field (strict parsing rejects silent misconfiguration)
-  3. User receives a clear startup error if the config is semantically invalid (e.g., missing required fields, invalid enum values for source or action)
-  4. Go module is initialized with project structure (`cmd/karaclean/`, `internal/config/`) and the config types compile
-**Plans**: 2 plans
-
-Plans:
-- [x] 01-01-PLAN.md -- Go module init, config types, Load() with strict parsing, tests
-- [x] 01-02-PLAN.md -- Semantic validation with collected errors, validation tests
-
-### Phase 2: API Client and Authentication
-**Goal**: The application can communicate with Karakeep and confirms a valid connection before doing any work
-**Depends on**: Phase 1
-**Requirements**: CONF-03
-**Success Criteria** (what must be TRUE):
-  1. Application validates the API bearer token against Karakeep on startup and exits with a clear error if authentication fails
-  2. API client can list bookmarks with cursor-based pagination and return typed Go structs with all relevant fields (id, createdAt, archived, favourited, source, tags, note)
-  3. API client interface (`KarakeepAPI`) is defined in the engine package, enabling mock-based testing without real HTTP calls
-**Plans**: 3 plans
-
-Plans:
-- [x] 02-00-PLAN.md -- Wave 0 test stubs: client_test.go, api_test.go, main_test.go (Nyquist compliance)
-- [x] 02-01-PLAN.md -- oapi-codegen setup, generated client, engine types/interface, thin wrapper
-- [x] 02-02-PLAN.md -- Verify tests GREEN, fix JSON fixtures, main.go startup wiring with TestRequireEnv
-
-### Phase 3: Age and Source Conditions
-**Goal**: Rules can identify bookmarks based on how old they are and where they came from
-**Depends on**: Phase 2
-**Requirements**: COND-01, COND-02
-**Success Criteria** (what must be TRUE):
-  1. A rule with `olderThan: 30d` matches only bookmarks created more than 30 days ago
-  2. A rule with `source: rss` matches only bookmarks ingested from RSS feeds (and similarly for web, api, mobile, extension, cli, import)
-  3. Conditions compose correctly -- a rule with both `olderThan` and `source` matches only bookmarks satisfying both
-  4. Matcher functions are pure (no I/O) and have comprehensive unit tests
-**Plans**: 2 plans
-
-Plans:
-- [ ] 03-01-PLAN.md -- Duration parser package, OlderThan *int to *string migration, validation update
-- [ ] 03-02-PLAN.md -- MatchesConditions pure function with olderThan and source matching
-
-### Phase 4: Status and Tag Conditions
-**Goal**: Rules can filter bookmarks by their archived/favourited status and tag presence
-**Depends on**: Phase 3
-**Requirements**: COND-03, COND-04, COND-05, COND-06
-**Success Criteria** (what must be TRUE):
-  1. A rule with `archived: true` matches only archived bookmarks; `archived: false` matches only non-archived bookmarks
-  2. A rule with `favourited: true` matches only favourited bookmarks; `favourited: false` matches only non-favourited bookmarks
-  3. A rule with `hasTag: read-later` matches only bookmarks that carry the specified tag
-  4. A rule with `lacksTag: keep` matches only bookmarks that do not carry the specified tag
-  5. All condition types (age, source, status, tags) can be combined in a single rule and all must match for the rule to apply
-**Plans**: 2 plans
-
-Plans:
-- [ ] 04-01-PLAN.md -- Matcher: archived, favourited, hasTag, lacksTag conditions with tests
-- [ ] 04-02-PLAN.md -- Validation: reject empty hasTag/lacksTag strings with tests
-
-### Phase 5: Exception Evaluation
-**Goal**: Users can protect bookmarks they care about from being affected by cleanup rules
-**Depends on**: Phase 4
-**Requirements**: EXCP-01, EXCP-02, EXCP-03, EXCP-04
-**Success Criteria** (what must be TRUE):
-  1. A rule with `unless: favourited` skips any bookmark that is starred, even if all other conditions match
-  2. A rule with `unless: hasTag: important` skips any bookmark carrying the specified tag
-  3. A rule with `unless: hasNote` skips any bookmark where the user has added a personal note
-  4. A rule with `unless: archived` or `unless: notArchived` skips bookmarks based on their archive status
-  5. Multiple exception clauses on a single rule are evaluated with OR semantics (any exception triggers a skip)
-**Plans**: 2 plans
-
-Plans:
-- [ ] 05-01-PLAN.md -- MatchesExceptions function with OR semantics and comprehensive tests
-- [ ] 05-02-PLAN.md -- Validation: reject empty unless.hasTag strings with tests
-
-### Phase 6: Actions and Dry-Run
-**Goal**: Rules can archive or delete bookmarks, and dry-run mode lets users preview changes safely
-**Depends on**: Phase 5
-**Requirements**: ACTN-01, ACTN-02, ACTN-03
-**Success Criteria** (what must be TRUE):
-  1. A rule with `action: archive` sets `archived: true` on matched bookmarks via the Karakeep PATCH API
-  2. A rule with `action: delete` permanently removes matched bookmarks via the Karakeep DELETE API
-  3. When dry-run mode is enabled, no mutations (archive or delete) are executed against the API; all intended actions are logged instead
-  4. Dry-run output clearly shows what each bookmark's fate would be (archive vs delete) and why (which rule matched)
-**Plans**: 2 plans
-
-Plans:
-- [ ] 06-01-PLAN.md -- API interface extension, client methods, ExecuteAction with dry-run support
-- [ ] 06-02-PLAN.md -- DryRun config field, --dry-run flag, env var, precedence wiring
-
-### Phase 7: Run Orchestrator and Observability
-**Goal**: A complete rule evaluation run executes safely with collect-then-act ordering and produces a summary report
-**Depends on**: Phase 6
-**Requirements**: OBS-01
-**Success Criteria** (what must be TRUE):
-  1. A single run paginates all bookmarks into memory first, evaluates all rules, then executes mutations as a separate phase (collect-then-act pattern prevents pagination race conditions)
-  2. Each run produces a structured log summary showing counts: archived N, deleted M, skipped K, errors E
-  3. The application can be invoked for a single run (not just as a daemon) for testing and manual use
-**Plans**: 2 plans
-
-Plans:
-- [ ] 07-01-PLAN.md -- TDD: Run() orchestrator with RunSummary struct, collect-then-act, first-match-wins
-- [ ] 07-02-PLAN.md -- Wire main.go to call engine.Run() after auth, log summary, exit
-
-### Phase 8: Scheduler and Deployment
-**Goal**: Karaclean runs as a production Docker sidecar on a user-defined cron schedule
-**Depends on**: Phase 7
-**Requirements**: SCHED-01, SCHED-02, SCHED-03
-**Success Criteria** (what must be TRUE):
-  1. User defines a cron expression in the YAML config and the application executes rules on that schedule
-  2. User defines an explicit timezone in config; if omitted, the application defaults to UTC and logs a startup warning
-  3. The container runs as a long-lived daemon, executing rules on schedule and shutting down gracefully on SIGTERM/SIGINT
-  4. A working Dockerfile produces a minimal image (scratch base, static binary) and a docker-compose.yml example shows sidecar deployment alongside Karakeep
-  5. An example YAML config file documents all available conditions, exceptions, and actions
-**Plans**: 2 plans
-
-Plans:
-- [ ] 08-01-PLAN.md -- Config validation for schedule and timezone with robfig/cron v3 dependency
-- [ ] 08-02-PLAN.md -- Daemon loop with signal handling, Dockerfile, docker-compose, example config
-
-### Phase 9: Documentation: extensive README, CLI and Docker image usage docs
-**Goal:** A new user reading only the README can install, configure, and run Karaclean as a Docker sidecar with custom cleanup rules
-**Depends on:** Phase 8
-**Requirements**: None (documentation-only phase)
-**Success Criteria** (what must be TRUE):
-  1. README.md documents every config field, condition, exception, and action with types, defaults, and examples
-  2. README.md documents all CLI flags, environment variables, and config path resolution order
-  3. README.md shows Docker and docker-compose usage with concrete, copy-pasteable examples
-  4. Documentation is verified accurate against source code (no stale or incorrect information)
-**Plans**: 1 plan
-
-Plans:
-- [ ] 09-01-PLAN.md -- Comprehensive README.md with config reference, CLI docs, Docker usage, rule examples
-
-### Phase 10: CI: run tests, lint, and build docker image
-**Goal:** GitHub Actions CI automatically runs tests, lints code, and builds the Docker image on every push to main and PR, pushing to ghcr.io only on main merge
-**Depends on:** Phase 9
-**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05
-**Success Criteria** (what must be TRUE):
-  1. golangci-lint v2 config exists with locked linter set (standard + gocyclo, godot, misspell, noctx)
-  2. All existing Go code passes the configured linter set without violations
-  3. CI workflow runs `go test -race ./...` on push to main and PRs targeting main
-  4. CI workflow runs golangci-lint on push to main and PRs targeting main
-  5. CI workflow builds Docker image on all triggers and pushes to ghcr.io only on main merge
-**Plans**: 2 plans
-
-Plans:
-- [ ] 10-01-PLAN.md -- golangci-lint v2 config and fix existing lint violations
-- [ ] 10-02-PLAN.md -- GitHub Actions CI workflow with test, lint, and docker jobs
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Config Loading and Validation | 0/2 | Planning complete | - |
-| 2. API Client and Authentication | 0/3 | Planning complete | - |
-| 3. Age and Source Conditions | 2/2 | Complete   | 2026-03-18 |
-| 4. Status and Tag Conditions | 2/2 | Complete   | 2026-03-18 |
-| 5. Exception Evaluation | 1/2 | In Progress|  |
-| 6. Actions and Dry-Run | 2/2 | Complete   | 2026-03-18 |
-| 7. Run Orchestrator and Observability | 2/2 | Complete   | 2026-03-18 |
-| 8. Scheduler and Deployment | 1/2 | In Progress|  |
-| 9. Documentation | 1/1 | Complete   | 2026-03-19 |
-| 10. CI | 2/2 | Complete    | 2026-03-19 |
+| Phase | Milestone | Plans | Status | Completed |
+|-------|-----------|-------|--------|-----------|
+| 1. Config Loading and Validation | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 2. API Client and Authentication | v1.0 | 3/3 | Complete | 2026-03-18 |
+| 3. Age and Source Conditions | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 4. Status and Tag Conditions | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 5. Exception Evaluation | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 6. Actions and Dry-Run | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 7. Run Orchestrator and Observability | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 8. Scheduler and Deployment | v1.0 | 2/2 | Complete | 2026-03-19 |
+| 9. Documentation | v1.0 | 1/1 | Complete | 2026-03-19 |
+| 10. CI: Tests, Lint, Docker | v1.0 | 2/2 | Complete | 2026-03-19 |
