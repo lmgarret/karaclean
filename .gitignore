@@ -1,2 +1,5 @@
 # Go binary output
 /karaclean
+
+# GSD workflow tooling (local, updated via /gsd:update)
+.claude/
