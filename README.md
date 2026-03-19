@@ -35,7 +35,7 @@ rules:
 ```yaml
 services:
   karaclean:
-    image: ghcr.io/lm/karaclean:latest
+    image: ghcr.io/lmgarret/karaclean:latest
     environment:
       - KARAKEEP_URL=http://karakeep:3000
       - KARAKEEP_API_KEY=your-api-key-here
@@ -238,7 +238,7 @@ Karaclean is designed to run as a Docker container.
 
 ### Image Tags
 
-The Docker image is published to `ghcr.io/lm/karaclean` with two tag strategies:
+The Docker image is published to `ghcr.io/lmgarret/karaclean` with two tag strategies:
 
 | Tag | Description |
 |-----|-------------|
@@ -246,8 +246,8 @@ The Docker image is published to `ghcr.io/lm/karaclean` with two tag strategies:
 | `<sha>` | Short Git commit SHA (e.g., `abc1234`) for pinning to a specific build |
 
 ```bash
-docker pull ghcr.io/lm/karaclean:latest
-docker pull ghcr.io/lm/karaclean:<sha>
+docker pull ghcr.io/lmgarret/karaclean:latest
+docker pull ghcr.io/lmgarret/karaclean:<sha>
 ```
 
 **Recommendation:** Pin to a SHA tag in production to avoid unexpected changes from new builds.
