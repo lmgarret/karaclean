@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-19 after v1.0 milestone)
 Phase: 10 of 10 (CI: Run Tests, Lint, and Build Docker Image)
 Plan: 2 of 2 in current phase (complete)
 Status: Complete
-Last activity: 2026-03-19 -- Completed plan 10-02 (CI workflow with test, lint, docker jobs)
+Last activity: 2026-03-19 - Completed quick task 260319-tck: Update README with personal note, get-shit-done mention, and Docker image tags
 
 Progress: [██████████] 100%
 
@@ -123,6 +123,12 @@ None.
 ### Blockers/Concerns
 
 - Pitfall (noted, not blocking): Karakeep config source validation missing "singlefile" — OpenAPI spec includes it, Phase 1 validation does not. Monitor if it causes issues in Phase 3+.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260319-tck | Update README with personal note, get-shit-done mention, and Docker image tags | 2026-03-19 | 14582e6 | [260319-tck-update-readme-with-personal-note-get-shi](./quick/260319-tck-update-readme-with-personal-note-get-shi/) |
 
 ## Session Continuity
 
