@@ -56,7 +56,8 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 				matched = true
 				break
 			}
-			result := ExecuteAction(ctx, api, rule.Action, b.ID, rule.Name, dryRun)
+			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
+		result := ExecuteAction(ctx, api, rule.Action, b.ID, rule.Name, effectiveDryRun)
 			if result.Err != nil {
 				summary.Errors++
 			} else {
@@ -75,4 +76,13 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 		}
 	}
 	return summary, nil
+}
+
+// ResolveRuleDryRun determines effective dry-run for a rule.
+// Per-rule setting (non-nil) overrides global; nil inherits global.
+func ResolveRuleDryRun(ruleDryRun *bool, globalDryRun bool) bool {
+	if ruleDryRun != nil {
+		return *ruleDryRun
+	}
+	return globalDryRun
 }
