@@ -159,10 +159,26 @@ Plans:
 Plans:
 - [ ] 09-01-PLAN.md -- Comprehensive README.md with config reference, CLI docs, Docker usage, rule examples
 
+### Phase 10: CI: run tests, lint, and build docker image
+**Goal:** GitHub Actions CI automatically runs tests, lints code, and builds the Docker image on every push to main and PR, pushing to ghcr.io only on main merge
+**Depends on:** Phase 9
+**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05
+**Success Criteria** (what must be TRUE):
+  1. golangci-lint v2 config exists with locked linter set (standard + gocyclo, godot, misspell, noctx)
+  2. All existing Go code passes the configured linter set without violations
+  3. CI workflow runs `go test -race ./...` on push to main and PRs targeting main
+  4. CI workflow runs golangci-lint on push to main and PRs targeting main
+  5. CI workflow builds Docker image on all triggers and pushes to ghcr.io only on main merge
+**Plans**: 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md -- golangci-lint v2 config and fix existing lint violations
+- [ ] 10-02-PLAN.md -- GitHub Actions CI workflow with test, lint, and docker jobs
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -175,3 +191,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 7. Run Orchestrator and Observability | 2/2 | Complete   | 2026-03-18 |
 | 8. Scheduler and Deployment | 1/2 | In Progress|  |
 | 9. Documentation | 1/1 | Complete   | 2026-03-19 |
+| 10. CI | 0/2 | Planning complete | - |
