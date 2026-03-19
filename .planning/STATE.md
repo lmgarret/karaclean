@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-18T17:24:22.164Z"
-last_activity: 2026-03-18 -- Completed plan 08-01 (schedule and timezone config validation)
+status: completed
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-19T07:02:58.798Z"
+last_activity: 2026-03-19 -- Completed plan 09-01 (comprehensive README documentation)
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 17
-  completed_plans: 17
+  total_phases: 9
+  completed_phases: 9
+  total_plans: 18
+  completed_plans: 18
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 8 in progress -- scheduler and deployment
+**Current focus:** Phase 9 complete -- documentation
 
 ## Current Position
 
-Phase: 8 of 8 (Scheduler and Deployment)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-03-18 -- Completed plan 08-01 (schedule and timezone config validation)
+Phase: 9 of 9 (Documentation)
+Plan: 1 of 1 in current phase (complete)
+Status: Complete
+Last activity: 2026-03-19 -- Completed plan 09-01 (comprehensive README documentation)
 
 Progress: [██████████] 100%
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 07 P02 | 1min | 1 tasks | 1 files |
 | Phase 08 P01 | 4min | 2 tasks | 7 files |
 | Phase 08 P02 | 2min | 2 tasks | 4 files |
+| Phase 09 P01 | 2min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,11 @@ Recent decisions affecting current work:
 - [Phase 08]: Embedded timezone database via time/tzdata for scratch images
 - [Phase 08]: Run-on-start executes synchronously before cron.Start() for early error detection
 - [Phase 08]: SkipIfStillRunning prevents overlapping cron runs
+- [Phase 09]: Corrected Config Validation docs: name field not validated at startup despite being semantically required
+
+### Roadmap Evolution
+
+- Phase 9 added: Documentation: extensive README, CLI and Docker image usage docs
 
 ### Pending Todos
 
@@ -115,6 +121,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:22:02.644Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-19T07:02:58.792Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
