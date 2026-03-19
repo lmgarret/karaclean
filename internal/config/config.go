@@ -21,6 +21,7 @@ type Rule struct {
 	Conditions *Conditions `yaml:"conditions"`
 	Unless     *Exceptions `yaml:"unless"`
 	Action     string      `yaml:"action"`
+	DryRun     *bool       `yaml:"dryRun"`
 }
 
 // Conditions specifies the matching criteria for bookmarks.

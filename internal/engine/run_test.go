@@ -128,6 +128,42 @@ func TestRun(t *testing.T) {
 			// In dry-run, ExecuteAction skips the API call, so no archiveBookmarkCalls
 		},
 		{
+			name:   "per-rule dryRun true overrides global false",
+			dryRun: false,
+			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
+				{ID: "bk-1", CreatedAt: oldCreatedAt},
+			}},
+			rules: []config.Rule{
+				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive", DryRun: ptrBool(true)},
+			},
+			want: engine.RunSummary{Archived: 1},
+			// Per-rule dryRun=true means no API calls despite global dryRun=false
+		},
+		{
+			name:   "per-rule dryRun false overrides global true",
+			dryRun: true,
+			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
+				{ID: "bk-1", CreatedAt: oldCreatedAt},
+			}},
+			rules: []config.Rule{
+				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive", DryRun: ptrBool(false)},
+			},
+			want:             engine.RunSummary{Archived: 1},
+			wantArchiveCalls: []string{"bk-1"},
+		},
+		{
+			name:   "per-rule dryRun nil inherits global true",
+			dryRun: true,
+			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
+				{ID: "bk-1", CreatedAt: oldCreatedAt},
+			}},
+			rules: []config.Rule{
+				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive", DryRun: nil},
+			},
+			want: engine.RunSummary{Archived: 1},
+			// nil DryRun inherits global=true, so no API calls
+		},
+		{
 			name: "mixed scenario",
 			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
 				{ID: "bk-1", CreatedAt: oldCreatedAt},                           // matches rule1 -> archive
@@ -197,6 +233,36 @@ func assertNoActionCalls(t *testing.T, name string, api *mockAPI) {
 		if len(api.archiveBookmarkCalls) != 0 {
 			t.Errorf("expected no archive calls in dry-run, got %v", api.archiveBookmarkCalls)
 		}
+	case "per-rule dryRun true overrides global false":
+		if len(api.archiveBookmarkCalls) != 0 {
+			t.Errorf("expected no archive calls when per-rule dryRun=true, got %v", api.archiveBookmarkCalls)
+		}
+	case "per-rule dryRun nil inherits global true":
+		if len(api.archiveBookmarkCalls) != 0 {
+			t.Errorf("expected no archive calls when inheriting global dryRun=true, got %v", api.archiveBookmarkCalls)
+		}
+	}
+}
+
+func TestResolveRuleDryRun(t *testing.T) {
+	tests := []struct {
+		name        string
+		ruleDryRun  *bool
+		globalDryRun bool
+		want        bool
+	}{
+		{"nil inherits global false", nil, false, false},
+		{"nil inherits global true", nil, true, true},
+		{"ptr true overrides global false", ptrBool(true), false, true},
+		{"ptr false overrides global true", ptrBool(false), true, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := engine.ResolveRuleDryRun(tt.ruleDryRun, tt.globalDryRun)
+			if got != tt.want {
+				t.Errorf("ResolveRuleDryRun(%v, %v) = %v, want %v", tt.ruleDryRun, tt.globalDryRun, got, tt.want)
+			}
+		})
 	}
 }
 

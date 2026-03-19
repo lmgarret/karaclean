@@ -241,6 +241,83 @@ rules:
 	}
 }
 
+func TestLoad_RuleDryRunTrue(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `schedule: "0 3 * * *"
+rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+    dryRun: true
+`
+	path := filepath.Join(dir, "rule_dryrun_true.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Rules[0].DryRun == nil {
+		t.Fatal("expected DryRun to be non-nil")
+	}
+	if *cfg.Rules[0].DryRun != true {
+		t.Errorf("*cfg.Rules[0].DryRun = %v, want true", *cfg.Rules[0].DryRun)
+	}
+}
+
+func TestLoad_RuleDryRunFalse(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `schedule: "0 3 * * *"
+rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+    dryRun: false
+`
+	path := filepath.Join(dir, "rule_dryrun_false.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Rules[0].DryRun == nil {
+		t.Fatal("expected DryRun to be non-nil")
+	}
+	if *cfg.Rules[0].DryRun != false {
+		t.Errorf("*cfg.Rules[0].DryRun = %v, want false", *cfg.Rules[0].DryRun)
+	}
+}
+
+func TestLoad_RuleDryRunOmitted(t *testing.T) {
+	dir := t.TempDir()
+	yamlContent := `schedule: "0 3 * * *"
+rules:
+  - name: test
+    conditions:
+      source: rss
+    action: archive
+`
+	path := filepath.Join(dir, "rule_dryrun_omitted.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Rules[0].DryRun != nil {
+		t.Errorf("expected DryRun to be nil (omitted), got %v", *cfg.Rules[0].DryRun)
+	}
+}
+
 func TestResolvePath_Flag(t *testing.T) {
 	got := config.ResolvePath("explicit.yaml")
 	if got != "explicit.yaml" {
