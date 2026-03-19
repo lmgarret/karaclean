@@ -52,7 +52,7 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("opening config: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var cfg Config
 	decoder := yaml.NewDecoder(f)
@@ -71,7 +71,7 @@ func Load(path string) (*Config, error) {
 // ResolvePath determines the config file path using the precedence:
 // 1. Explicit flag value (if non-empty)
 // 2. KARACLEAN_CONFIG environment variable (if set)
-// 3. Default path: /config/karaclean.yaml
+// 3. Default path: /config/karaclean.yaml.
 func ResolvePath(flagValue string) string {
 	if flagValue != "" {
 		return flagValue

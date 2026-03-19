@@ -16,54 +16,48 @@ func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time) bool
 		return true
 	}
 
-	if c.OlderThan != nil {
-		// Error ignored: config validation guarantees valid duration format at load time.
-		dur, _ := duration.Parse(*c.OlderThan)
-		if runTime.Sub(b.CreatedAt) <= dur {
-			return false
-		}
+	if c.OlderThan != nil && !matchesOlderThan(b, *c.OlderThan, runTime) {
+		return false
 	}
 
-	if c.Source != nil {
-		if b.Source != *c.Source {
-			return false
-		}
+	if c.Source != nil && b.Source != *c.Source {
+		return false
 	}
 
-	if c.Archived != nil {
-		if b.Archived != *c.Archived {
-			return false
-		}
+	if c.Archived != nil && b.Archived != *c.Archived {
+		return false
 	}
 
-	if c.Favourited != nil {
-		if b.Favourited != *c.Favourited {
-			return false
-		}
+	if c.Favourited != nil && b.Favourited != *c.Favourited {
+		return false
 	}
 
-	if c.HasTag != nil {
-		found := false
-		for _, tag := range b.Tags {
-			if tag == *c.HasTag {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	if c.HasTag != nil && !hasTag(b.Tags, *c.HasTag) {
+		return false
 	}
 
-	if c.LacksTag != nil {
-		for _, tag := range b.Tags {
-			if tag == *c.LacksTag {
-				return false
-			}
-		}
+	if c.LacksTag != nil && hasTag(b.Tags, *c.LacksTag) {
+		return false
 	}
 
 	return true
+}
+
+// matchesOlderThan returns true if the bookmark is strictly older than the given duration.
+func matchesOlderThan(b Bookmark, olderThan string, runTime time.Time) bool {
+	// Error ignored: config validation guarantees valid duration format at load time.
+	dur, _ := duration.Parse(olderThan)
+	return runTime.Sub(b.CreatedAt) > dur
+}
+
+// hasTag returns true if the tag list contains the given tag (case-sensitive).
+func hasTag(tags []string, tag string) bool {
+	for _, t := range tags {
+		if t == tag {
+			return true
+		}
+	}
+	return false
 }
 
 // MatchesExceptions returns true if the bookmark is protected by any exception clause (OR semantics).

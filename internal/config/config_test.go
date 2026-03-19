@@ -9,7 +9,6 @@ import (
 	"github.com/lm/karaclean/internal/config"
 )
 
-func intPtr(i int) *int       { return &i }
 func strPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool    { return &b }
 
@@ -29,8 +28,17 @@ func TestLoad_ValidFull(t *testing.T) {
 		t.Fatalf("len(rules) = %d, want 2", len(cfg.Rules))
 	}
 
-	// First rule
-	r0 := cfg.Rules[0]
+	t.Run("first rule", func(t *testing.T) {
+		assertFirstRule(t, cfg.Rules[0])
+	})
+
+	t.Run("second rule", func(t *testing.T) {
+		assertSecondRule(t, cfg.Rules[1])
+	})
+}
+
+func assertFirstRule(t *testing.T, r0 config.Rule) {
+	t.Helper()
 	if r0.Name != "old-rss-cleanup" {
 		t.Errorf("rules[0].name = %q, want %q", r0.Name, "old-rss-cleanup")
 	}
@@ -52,9 +60,10 @@ func TestLoad_ValidFull(t *testing.T) {
 	if r0.Action != "archive" {
 		t.Errorf("rules[0].action = %q, want %q", r0.Action, "archive")
 	}
+}
 
-	// Second rule
-	r1 := cfg.Rules[1]
+func assertSecondRule(t *testing.T, r1 config.Rule) {
+	t.Helper()
 	if r1.Action != "delete" {
 		t.Errorf("rules[1].action = %q, want %q", r1.Action, "delete")
 	}

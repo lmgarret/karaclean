@@ -156,50 +156,47 @@ func TestRun(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("Run() = %+v, want %+v", got, tt.want)
 			}
-			if tt.wantArchiveCalls != nil {
-				if len(tt.api.archiveBookmarkCalls) != len(tt.wantArchiveCalls) {
-					t.Errorf("archiveBookmarkCalls = %v, want %v", tt.api.archiveBookmarkCalls, tt.wantArchiveCalls)
-				} else {
-					for i, id := range tt.wantArchiveCalls {
-						if tt.api.archiveBookmarkCalls[i] != id {
-							t.Errorf("archiveBookmarkCalls[%d] = %q, want %q", i, tt.api.archiveBookmarkCalls[i], id)
-						}
-					}
-				}
-			}
-			if tt.wantDeleteCalls != nil {
-				if len(tt.api.deleteBookmarkCalls) != len(tt.wantDeleteCalls) {
-					t.Errorf("deleteBookmarkCalls = %v, want %v", tt.api.deleteBookmarkCalls, tt.wantDeleteCalls)
-				} else {
-					for i, id := range tt.wantDeleteCalls {
-						if tt.api.deleteBookmarkCalls[i] != id {
-							t.Errorf("deleteBookmarkCalls[%d] = %q, want %q", i, tt.api.deleteBookmarkCalls[i], id)
-						}
-					}
-				}
-			}
-			// For "first match wins", also verify no delete calls happened
-			if tt.name == "first match wins stops after first rule" {
-				if len(tt.api.deleteBookmarkCalls) != 0 {
-					t.Errorf("expected no delete calls, got %v", tt.api.deleteBookmarkCalls)
-				}
-			}
-			// For "excepted bookmark", verify no action calls
-			if tt.name == "excepted bookmark increments Excepted" {
-				if len(tt.api.archiveBookmarkCalls) != 0 {
-					t.Errorf("expected no archive calls for excepted bookmark, got %v", tt.api.archiveBookmarkCalls)
-				}
-				if len(tt.api.deleteBookmarkCalls) != 0 {
-					t.Errorf("expected no delete calls for excepted bookmark, got %v", tt.api.deleteBookmarkCalls)
-				}
-			}
-			// For "dry run", verify no archive calls on the mock
-			if tt.name == "dry run passes through and counts" {
-				if len(tt.api.archiveBookmarkCalls) != 0 {
-					t.Errorf("expected no archive calls in dry-run, got %v", tt.api.archiveBookmarkCalls)
-				}
-			}
+			assertCalls(t, "archiveBookmarkCalls", tt.api.archiveBookmarkCalls, tt.wantArchiveCalls)
+			assertCalls(t, "deleteBookmarkCalls", tt.api.deleteBookmarkCalls, tt.wantDeleteCalls)
+			assertNoActionCalls(t, tt.name, tt.api)
 		})
+	}
+}
+
+func assertCalls(t *testing.T, label string, got, want []string) {
+	t.Helper()
+	if want == nil {
+		return
+	}
+	if len(got) != len(want) {
+		t.Errorf("%s = %v, want %v", label, got, want)
+		return
+	}
+	for i, id := range want {
+		if got[i] != id {
+			t.Errorf("%s[%d] = %q, want %q", label, i, got[i], id)
+		}
+	}
+}
+
+func assertNoActionCalls(t *testing.T, name string, api *mockAPI) {
+	t.Helper()
+	switch name {
+	case "first match wins stops after first rule":
+		if len(api.deleteBookmarkCalls) != 0 {
+			t.Errorf("expected no delete calls, got %v", api.deleteBookmarkCalls)
+		}
+	case "excepted bookmark increments Excepted":
+		if len(api.archiveBookmarkCalls) != 0 {
+			t.Errorf("expected no archive calls for excepted bookmark, got %v", api.archiveBookmarkCalls)
+		}
+		if len(api.deleteBookmarkCalls) != 0 {
+			t.Errorf("expected no delete calls for excepted bookmark, got %v", api.deleteBookmarkCalls)
+		}
+	case "dry run passes through and counts":
+		if len(api.archiveBookmarkCalls) != 0 {
+			t.Errorf("expected no archive calls in dry-run, got %v", api.archiveBookmarkCalls)
+		}
 	}
 }
 

@@ -97,14 +97,16 @@ func main() {
 		cron.WithLocation(loc),
 		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
 	)
-	c.AddFunc(cfg.Schedule, func() {
+	if _, err := c.AddFunc(cfg.Schedule, func() {
 		summary, err := engine.Run(ctx, client, cfg.Rules, dryRun)
 		if err != nil {
 			log.Printf("error: %v", err)
 			return
 		}
 		log.Printf("run complete: %s", summary)
-	})
+	}); err != nil {
+		log.Fatalf("failed to register cron job: %v", err)
+	}
 
 	c.Start()
 	entries := c.Entries()

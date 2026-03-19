@@ -43,22 +43,8 @@ var validSources = []string{"rss", "web", "api", "mobile", "extension", "cli", "
 func (c *Config) Validate() []ValidationError {
 	var errs []ValidationError
 
-	// Validate schedule field (SCHED-01)
-	if c.Schedule == "" {
-		errs = append(errs, ValidationError{Field: "schedule", Message: "schedule is required"})
-	} else {
-		parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
-		if _, err := parser.Parse(c.Schedule); err != nil {
-			errs = append(errs, ValidationError{Field: "schedule", Message: fmt.Sprintf("invalid cron expression: %v", err)})
-		}
-	}
-
-	// Validate timezone field (SCHED-02) — empty is valid (defaults to UTC at runtime)
-	if c.Timezone != "" {
-		if _, err := time.LoadLocation(c.Timezone); err != nil {
-			errs = append(errs, ValidationError{Field: "timezone", Message: fmt.Sprintf("invalid timezone: %v", err)})
-		}
-	}
+	errs = append(errs, c.validateSchedule()...)
+	errs = append(errs, c.validateTimezone()...)
 
 	if len(c.Rules) == 0 {
 		errs = append(errs, ValidationError{
@@ -69,84 +55,120 @@ func (c *Config) Validate() []ValidationError {
 
 	for i, rule := range c.Rules {
 		prefix := fmt.Sprintf("rules[%d]", i)
+		errs = append(errs, validateRule(rule, prefix)...)
+	}
 
-		// Check action
-		if rule.Action == "" {
+	return errs
+}
+
+// validateSchedule checks the schedule field (SCHED-01).
+func (c *Config) validateSchedule() []ValidationError {
+	if c.Schedule == "" {
+		return []ValidationError{{Field: "schedule", Message: "schedule is required"}}
+	}
+	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	if _, err := parser.Parse(c.Schedule); err != nil {
+		return []ValidationError{{Field: "schedule", Message: fmt.Sprintf("invalid cron expression: %v", err)}}
+	}
+	return nil
+}
+
+// validateTimezone checks the timezone field (SCHED-02) -- empty is valid (defaults to UTC at runtime).
+func (c *Config) validateTimezone() []ValidationError {
+	if c.Timezone != "" {
+		if _, err := time.LoadLocation(c.Timezone); err != nil {
+			return []ValidationError{{Field: "timezone", Message: fmt.Sprintf("invalid timezone: %v", err)}}
+		}
+	}
+	return nil
+}
+
+// validateRule checks a single rule's action, conditions, and exceptions.
+func validateRule(rule Rule, prefix string) []ValidationError {
+	var errs []ValidationError
+
+	// Check action.
+	if rule.Action == "" {
+		errs = append(errs, ValidationError{
+			Field:   prefix,
+			Message: `missing required field "action"`,
+		})
+	} else if !contains(validActions, rule.Action) {
+		errs = append(errs, ValidationError{
+			Field:   prefix + ".action",
+			Message: fmt.Sprintf("invalid value %q (must be archive or delete)", rule.Action),
+		})
+	}
+
+	// Check conditions.
+	if rule.Conditions == nil {
+		errs = append(errs, ValidationError{
+			Field:   prefix,
+			Message: `missing required field "conditions"`,
+		})
+	} else {
+		errs = append(errs, validateConditions(rule.Conditions, prefix+".conditions")...)
+	}
+
+	// Validate exceptions.
+	if rule.Unless != nil {
+		if rule.Unless.HasTag != nil && *rule.Unless.HasTag == "" {
 			errs = append(errs, ValidationError{
-				Field:   prefix,
-				Message: `missing required field "action"`,
-			})
-		} else if !contains(validActions, rule.Action) {
-			errs = append(errs, ValidationError{
-				Field:   prefix + ".action",
-				Message: fmt.Sprintf("invalid value %q (must be archive or delete)", rule.Action),
+				Field:   prefix + ".unless.hasTag",
+				Message: "must not be empty",
 			})
 		}
+	}
 
-		// Check conditions
-		if rule.Conditions == nil {
+	return errs
+}
+
+// validateConditions checks a conditions block for semantic correctness.
+func validateConditions(cond *Conditions, prefix string) []ValidationError {
+	var errs []ValidationError
+
+	// Check all condition fields are nil (empty conditions).
+	if cond.OlderThan == nil &&
+		cond.Source == nil &&
+		cond.Archived == nil &&
+		cond.Favourited == nil &&
+		cond.HasTag == nil &&
+		cond.LacksTag == nil {
+		return []ValidationError{{Field: prefix, Message: "at least one condition required"}}
+	}
+
+	// Validate source enum.
+	if cond.Source != nil && !contains(validSources, *cond.Source) {
+		errs = append(errs, ValidationError{
+			Field:   prefix + ".source",
+			Message: fmt.Sprintf("invalid value %q (must be %s)", *cond.Source, strings.Join(validSources, ", ")),
+		})
+	}
+
+	// Validate olderThan is a valid duration string.
+	if cond.OlderThan != nil {
+		if _, err := duration.Parse(*cond.OlderThan); err != nil {
 			errs = append(errs, ValidationError{
-				Field:   prefix,
-				Message: `missing required field "conditions"`,
+				Field:   prefix + ".olderThan",
+				Message: err.Error(),
 			})
-		} else {
-			// Check all condition fields are nil (empty conditions)
-			if rule.Conditions.OlderThan == nil &&
-				rule.Conditions.Source == nil &&
-				rule.Conditions.Archived == nil &&
-				rule.Conditions.Favourited == nil &&
-				rule.Conditions.HasTag == nil &&
-				rule.Conditions.LacksTag == nil {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".conditions",
-					Message: "at least one condition required",
-				})
-			}
-
-			// Validate source enum
-			if rule.Conditions.Source != nil && !contains(validSources, *rule.Conditions.Source) {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".conditions.source",
-					Message: fmt.Sprintf("invalid value %q (must be %s)", *rule.Conditions.Source, strings.Join(validSources, ", ")),
-				})
-			}
-
-			// Validate olderThan is a valid duration string
-			if rule.Conditions.OlderThan != nil {
-				if _, err := duration.Parse(*rule.Conditions.OlderThan); err != nil {
-					errs = append(errs, ValidationError{
-						Field:   prefix + ".conditions.olderThan",
-						Message: err.Error(),
-					})
-				}
-			}
-
-			// Validate hasTag is non-empty
-			if rule.Conditions.HasTag != nil && *rule.Conditions.HasTag == "" {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".conditions.hasTag",
-					Message: "must not be empty",
-				})
-			}
-
-			// Validate lacksTag is non-empty
-			if rule.Conditions.LacksTag != nil && *rule.Conditions.LacksTag == "" {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".conditions.lacksTag",
-					Message: "must not be empty",
-				})
-			}
 		}
+	}
 
-		// Validate exceptions
-		if rule.Unless != nil {
-			if rule.Unless.HasTag != nil && *rule.Unless.HasTag == "" {
-				errs = append(errs, ValidationError{
-					Field:   prefix + ".unless.hasTag",
-					Message: "must not be empty",
-				})
-			}
-		}
+	// Validate hasTag is non-empty.
+	if cond.HasTag != nil && *cond.HasTag == "" {
+		errs = append(errs, ValidationError{
+			Field:   prefix + ".hasTag",
+			Message: "must not be empty",
+		})
+	}
+
+	// Validate lacksTag is non-empty.
+	if cond.LacksTag != nil && *cond.LacksTag == "" {
+		errs = append(errs, ValidationError{
+			Field:   prefix + ".lacksTag",
+			Message: "must not be empty",
+		})
 	}
 
 	return errs
