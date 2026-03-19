@@ -335,7 +335,3 @@ Karaclean validates your config file thoroughly at startup, before any rules exe
 ## Built With
 
 This project was built using [get-shit-done](https://github.com/lmignot/get-shit-done), an AI coding workflow for Claude Code. All phases -- from config parsing through CI -- were planned and executed with GSD's structured approach.
-
-## License
-
-License: TBD
