@@ -10,6 +10,8 @@ Karaclean solves this by letting you define declarative YAML rules that describe
 
 Safety is built in. A **dry-run mode** lets you preview exactly what would happen before any mutations execute. **Exception clauses** protect bookmarks you care about -- favourites, tagged items, bookmarks with personal notes. **Strict config validation** rejects unknown fields at startup, so a typo like `olderThen` is caught immediately instead of silently ignored.
 
+Note: this project has been an exploration of AI coding tools for me. Although I do use karaclean with my own Karakeep instance, use it at your own risk!
+
 ## Quick Start
 
 1. **Get a Karakeep API key.** In the Karakeep web UI, go to Settings > API Keys and create a new key.
@@ -234,6 +236,22 @@ Karaclean is designed to run as a Docker container.
 - **Signals:** Responds to `SIGTERM` and `SIGINT` for graceful shutdown (waits for in-progress jobs to complete)
 - **Timezone:** Embeds the Go timezone database (`time/tzdata`), so there is no need to mount `/usr/share/zoneinfo`
 
+### Image Tags
+
+The Docker image is published to `ghcr.io/lm/karaclean` with two tag strategies:
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Always points to the most recent build from the `main` branch |
+| `<sha>` | Short Git commit SHA (e.g., `abc1234`) for pinning to a specific build |
+
+```bash
+docker pull ghcr.io/lm/karaclean:latest
+docker pull ghcr.io/lm/karaclean:<sha>
+```
+
+**Recommendation:** Pin to a SHA tag in production to avoid unexpected changes from new builds.
+
 ### Building the Image
 
 ```bash
@@ -313,6 +331,10 @@ Karaclean validates your config file thoroughly at startup, before any rules exe
 - **Invalid timezone names** in `timezone` are caught.
 - **Empty tag values** in `hasTag` and `lacksTag` are rejected.
 - **All errors are collected and reported together**, not one at a time, so you can fix everything in a single pass.
+
+## Built With
+
+This project was built using [get-shit-done](https://github.com/lmignot/get-shit-done), an AI coding workflow for Claude Code. All phases -- from config parsing through CI -- were planned and executed with GSD's structured approach.
 
 ## License
 
