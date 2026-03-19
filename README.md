@@ -306,7 +306,7 @@ Requires Go 1.26 or later.
 Karaclean validates your config file thoroughly at startup, before any rules execute:
 
 - **Unknown fields are rejected.** A typo like `olderThen` instead of `olderThan` produces a clear error immediately, rather than being silently ignored.
-- **Missing required fields** (`name`, `conditions`, `action`, `schedule`) produce descriptive error messages.
+- **Missing required fields** (`conditions`, `action`, `schedule`) produce descriptive error messages.
 - **Invalid enum values** for `source` (must be one of `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`) and `action` (must be `archive` or `delete`) are caught.
 - **Invalid duration formats** in `olderThan` are validated (must match `Nh`, `Nd`, `Nw`, `Nmo`, or `Ny`).
 - **Invalid cron expressions** in `schedule` are caught.
