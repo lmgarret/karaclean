@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-19 after v1.0 milestone)
 Phase: 10 of 10 (CI: Run Tests, Lint, and Build Docker Image)
 Plan: 2 of 2 in current phase (complete)
 Status: Complete
-Last activity: 2026-03-19 - Completed quick task 260319-tk0: Add MIT License
+Last activity: 2026-03-19 - Completed quick task 260319-uni: Per-rule dryRun and richer logs
 
 Progress: [██████████] 100%
 
@@ -130,9 +130,10 @@ None.
 |---|-------------|------|--------|-----------|
 | 260319-tck | Update README with personal note, get-shit-done mention, and Docker image tags | 2026-03-19 | 14582e6 | [260319-tck-update-readme-with-personal-note-get-shi](./quick/260319-tck-update-readme-with-personal-note-get-shi/) |
 | 260319-tk0 | Add MIT License | 2026-03-19 | 0662a6e | [260319-tk0-choose-and-add-the-right-license-for-thi](./quick/260319-tk0-choose-and-add-the-right-license-for-thi/) |
+| 260319-uni | Per-rule dryRun override and richer action logs | 2026-03-19 | f34f3cb | [260319-uni-per-rule-dryrun-and-richer-deletion-logs](./quick/260319-uni-per-rule-dryrun-and-richer-deletion-logs/) |
 
 ## Session Continuity
 
-Last session: 2026-03-19T20:20:41Z
-Stopped at: Completed quick task 260319-tk0: Add MIT License
+Last session: 2026-03-19T21:10:08Z
+Stopped at: Completed quick task 260319-uni: Per-rule dryRun and richer logs
 Resume file: None
