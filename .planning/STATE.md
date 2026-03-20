@@ -140,10 +140,11 @@ None.
 | 260320-emk | Display bookmark size in deletion logs and run summary | 2026-03-20 | 6fcbffc | [260320-emk-display-bookmark-size-in-deletion-logs-a](./quick/260320-emk-display-bookmark-size-in-deletion-logs-a/) |
 | 260320-khk | Update README and example config with per-rule dryRun, bookmark size, notifications | 2026-03-20 | 88c6c38 | [260320-khk-readme-has-not-been-updated-with-the-las](./quick/260320-khk-readme-has-not-been-updated-with-the-las/) |
 | 260320-lfo | Fix HTTP 204 treated as error in DeleteBookmark | 2026-03-20 | f7ff86d | [260320-lfo-fix-http-204-treated-as-error-on-bookmar](./quick/260320-lfo-fix-http-204-treated-as-error-on-bookmar/) |
+| 260320-ls1 | Remove title duplication from notification body, add Summary: prefix | 2026-03-20 | d4843c7 | [260320-ls1-improve-notification-messages-remove-tit](./quick/260320-ls1-improve-notification-messages-remove-tit/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-20 - Completed quick task 260320-lfo: Fix HTTP 204 treated as error in DeleteBookmark
-Last session: 2026-03-20T14:29:43Z
-Stopped at: Completed quick task 260320-lfo
+Last activity: 2026-03-20 - Completed quick task 260320-ls1: Improve notification message format
+Last session: 2026-03-20T14:42:00Z
+Stopped at: Completed quick task 260320-ls1
 Resume file: None
