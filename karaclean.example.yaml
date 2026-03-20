@@ -14,6 +14,19 @@ timezone: "UTC"
 # Precedence: flag > env > config.
 dryRun: false
 
+# Notifications: opt-in per-rule action summaries via Shoutrrr.
+# Omit this entire section to disable notifications.
+# Channel URLs use Shoutrrr format: https://github.com/nicholas-fedor/shoutrrr
+notifications:
+  channels:
+    my-ntfy:
+      url: "ntfy://ntfy.sh/karaclean-alerts"
+    # slack-ops:
+    #   url: "slack://hook:TOKEN-A/TOKEN-B/TOKEN-C@webhook"
+    # telegram:
+    #   url: "telegram://TOKEN@telegram?channels=CHAT_ID"
+  default: my-ntfy   # Channel used when a rule has no "notify" override
+
 rules:
   # Archive RSS bookmarks older than 30 days, unless favourited.
   - name: archive-old-rss
@@ -23,6 +36,7 @@ rules:
     unless:
       favourited: true       # Skip if bookmark is starred
     action: archive          # Values: archive, delete
+    # notify: slack-ops  # Optional: send this rule's summary to a specific channel
 
   # Delete archived bookmarks older than 90 days, unless tagged or noted.
   - name: delete-ancient-archived
@@ -33,6 +47,7 @@ rules:
       hasTag: keep-forever   # Skip if bookmark has this tag
       hasNote: true          # Skip if bookmark has a personal note
     action: delete
+    dryRun: true           # Always dry-run this dangerous rule, regardless of global setting
 
   # Archive unfavourited bookmarks that lack the "keep" tag after 60 days.
   - name: archive-stale-untagged
@@ -61,3 +76,7 @@ rules:
 # Actions:
 #   archive - set archived: true via Karakeep API
 #   delete  - permanently remove via Karakeep API
+#
+# Per-rule overrides:
+#   dryRun: true/false  - override global dry-run for this rule (omit to inherit global)
+#   notify: "channel"   - send this rule's summary to a specific notification channel
