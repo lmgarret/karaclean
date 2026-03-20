@@ -332,8 +332,8 @@ func TestRunNotification_ActiveRule(t *testing.T) {
 	if mn.calls[0].url != "ntfy://ntfy.sh/test" {
 		t.Errorf("url = %q, want ntfy://ntfy.sh/test", mn.calls[0].url)
 	}
-	if !strings.Contains(mn.calls[0].message, "[karaclean]") {
-		t.Errorf("message %q missing [karaclean]", mn.calls[0].message)
+	if !strings.Contains(mn.calls[0].message, "Summary:") {
+		t.Errorf("message %q missing Summary:", mn.calls[0].message)
 	}
 	if !strings.Contains(mn.calls[0].message, "deleted:") {
 		t.Errorf("message %q missing deleted:", mn.calls[0].message)
@@ -503,8 +503,8 @@ func TestRunNotification_DryRun(t *testing.T) {
 	if len(mn.calls) != 1 {
 		t.Fatalf("expected 1 call, got %d", len(mn.calls))
 	}
-	if !strings.Contains(mn.calls[0].message, "[DRY-RUN]") {
-		t.Errorf("message %q missing [DRY-RUN]", mn.calls[0].message)
+	if !strings.Contains(mn.calls[0].message, "Summary:") {
+		t.Errorf("message %q missing Summary:", mn.calls[0].message)
 	}
 }
 

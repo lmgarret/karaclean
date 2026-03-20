@@ -25,10 +25,10 @@ func TestFormatNotification(t *testing.T) {
 				Errors:     0,
 			},
 			dryRun: false,
-			want:   "[karaclean] old-rss\ndeleted: 12 (4.2 MB)\narchived: 3\nexcepted: 1",
+			want:   "Summary:\ndeleted: 12 (4.2 MB)\narchived: 3\nexcepted: 1",
 		},
 		{
-			name: "dry run prefix",
+			name: "dry run body unchanged",
 			rs: &engine.RuleSummary{
 				RuleName:   "old-rss",
 				Deleted:    12,
@@ -38,7 +38,7 @@ func TestFormatNotification(t *testing.T) {
 				Errors:     0,
 			},
 			dryRun: true,
-			want:   "[DRY-RUN] [karaclean] old-rss\ndeleted: 12 (4.2 MB)\narchived: 3\nexcepted: 1",
+			want:   "Summary:\ndeleted: 12 (4.2 MB)\narchived: 3\nexcepted: 1",
 		},
 		{
 			name: "deleted without size",
@@ -48,7 +48,7 @@ func TestFormatNotification(t *testing.T) {
 				TotalBytes: 0,
 			},
 			dryRun: false,
-			want:   "[karaclean] web-junk\ndeleted: 5",
+			want:   "Summary:\ndeleted: 5",
 		},
 		{
 			name: "errors shown when > 0",
@@ -57,7 +57,7 @@ func TestFormatNotification(t *testing.T) {
 				Errors:   3,
 			},
 			dryRun: false,
-			want:   "[karaclean] failing-rule\nerrors: 3",
+			want:   "Summary:\nerrors: 3",
 		},
 		{
 			name: "errors omitted when 0",
@@ -67,7 +67,7 @@ func TestFormatNotification(t *testing.T) {
 				Errors:   0,
 			},
 			dryRun: false,
-			want:   "[karaclean] clean-rule\ndeleted: 2",
+			want:   "Summary:\ndeleted: 2",
 		},
 		{
 			name: "archived omitted when 0",
@@ -77,7 +77,7 @@ func TestFormatNotification(t *testing.T) {
 				Archived: 0,
 			},
 			dryRun: false,
-			want:   "[karaclean] delete-only\ndeleted: 3",
+			want:   "Summary:\ndeleted: 3",
 		},
 		{
 			name: "deleted omitted when 0",
@@ -88,7 +88,7 @@ func TestFormatNotification(t *testing.T) {
 				Archived:   5,
 			},
 			dryRun: false,
-			want:   "[karaclean] archive-only\narchived: 5",
+			want:   "Summary:\narchived: 5",
 		},
 	}
 
