@@ -38,7 +38,7 @@ func (s RunSummary) String() string {
 //
 // Per-bookmark action errors increment Errors and do not abort the run.
 // Only a ListBookmarks failure returns a non-nil error.
-func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool) (RunSummary, error) {
+func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool, notifications *config.Notifications, notifier Notifier) (RunSummary, error) {
 	runTime := time.Now()
 
 	// Phase 1: Collect all bookmarks (fail-fast on error)
@@ -48,31 +48,42 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 	}
 	log.Printf("collected %d bookmarks", len(bookmarks))
 
+	// Initialize per-rule summaries for notification dispatch
+	ruleSummaries := make([]*RuleSummary, len(rules))
+	for i, rule := range rules {
+		ruleSummaries[i] = &RuleSummary{RuleName: rule.Name}
+	}
+
 	// Phase 2: Evaluate rules and act
 	var summary RunSummary
 	for _, b := range bookmarks {
 		matched := false
-		for _, rule := range rules {
+		for ruleIdx, rule := range rules {
 			if !MatchesConditions(b, rule.Conditions, runTime) {
 				continue
 			}
 			if MatchesExceptions(b, rule.Unless) {
 				summary.Excepted++
+				ruleSummaries[ruleIdx].Excepted++
 				matched = true
 				break
 			}
 			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
-		result := ExecuteAction(ctx, api, rule.Action, b, rule.Name, effectiveDryRun)
+			result := ExecuteAction(ctx, api, rule.Action, b, rule.Name, effectiveDryRun)
 			if result.Err != nil {
 				summary.Errors++
+				ruleSummaries[ruleIdx].Errors++
 			} else {
 				switch rule.Action {
 				case "archive":
 					summary.Archived++
+					ruleSummaries[ruleIdx].Archived++
 				case "delete":
 					summary.Deleted++
+					ruleSummaries[ruleIdx].Deleted++
 				}
 				summary.TotalBytes += result.Size
+				ruleSummaries[ruleIdx].TotalBytes += result.Size
 			}
 			matched = true
 			break
@@ -81,6 +92,27 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 			summary.NoMatch++
 		}
 	}
+
+	// Phase 3: Dispatch per-rule notifications
+	if notifier != nil {
+		for i, rule := range rules {
+			rs := ruleSummaries[i]
+			if !rs.HasActivity() {
+				continue
+			}
+			channelURL := ResolveChannelURL(notifications, rule.Notify)
+			if channelURL == "" {
+				continue
+			}
+			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
+			msg := FormatNotification(rs, effectiveDryRun)
+			title := FormatNotificationTitle(rs.RuleName, effectiveDryRun)
+			if err := notifier.Send(channelURL, msg, title); err != nil {
+				log.Printf("notification failed for rule %q: %v", rule.Name, err)
+			}
+		}
+	}
+
 	return summary, nil
 }
 

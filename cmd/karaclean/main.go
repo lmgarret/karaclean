@@ -70,6 +70,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Step 4.5: Create notifier for notification dispatch
+	var notifier engine.Notifier
+	if cfg.Notifications != nil {
+		notifier = &engine.ShoutrrrNotifier{}
+	}
+
 	// Step 5: Resolve timezone
 	loc := time.UTC
 	if cfg.Timezone != "" {
@@ -83,7 +89,7 @@ func main() {
 	defer stop()
 
 	// Step 7: Run immediately at startup (synchronous, before cron starts)
-	summary, err := engine.Run(ctx, client, cfg.Rules, dryRun)
+	summary, err := engine.Run(ctx, client, cfg.Rules, dryRun, cfg.Notifications, notifier)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -98,7 +104,7 @@ func main() {
 		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
 	)
 	if _, err := c.AddFunc(cfg.Schedule, func() {
-		summary, err := engine.Run(ctx, client, cfg.Rules, dryRun)
+		summary, err := engine.Run(ctx, client, cfg.Rules, dryRun, cfg.Notifications, notifier)
 		if err != nil {
 			log.Printf("error: %v", err)
 			return
