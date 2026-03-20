@@ -139,10 +139,11 @@ None.
 | 260319-uni | Per-rule dryRun override and richer action logs | 2026-03-19 | f34f3cb | [260319-uni-per-rule-dryrun-and-richer-deletion-logs](./quick/260319-uni-per-rule-dryrun-and-richer-deletion-logs/) |
 | 260320-emk | Display bookmark size in deletion logs and run summary | 2026-03-20 | 6fcbffc | [260320-emk-display-bookmark-size-in-deletion-logs-a](./quick/260320-emk-display-bookmark-size-in-deletion-logs-a/) |
 | 260320-khk | Update README and example config with per-rule dryRun, bookmark size, notifications | 2026-03-20 | 88c6c38 | [260320-khk-readme-has-not-been-updated-with-the-las](./quick/260320-khk-readme-has-not-been-updated-with-the-las/) |
+| 260320-lfo | Fix HTTP 204 treated as error in DeleteBookmark | 2026-03-20 | f7ff86d | [260320-lfo-fix-http-204-treated-as-error-on-bookmar](./quick/260320-lfo-fix-http-204-treated-as-error-on-bookmar/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-20 - Completed quick task 260320-khk: README has NOT been updated with the last two implementations, address that
-Last session: 2026-03-20T13:49:24Z
-Stopped at: Completed quick task 260320-khk
+Last activity: 2026-03-20 - Completed quick task 260320-lfo: Fix HTTP 204 treated as error in DeleteBookmark
+Last session: 2026-03-20T14:29:43Z
+Stopped at: Completed quick task 260320-lfo
 Resume file: None
