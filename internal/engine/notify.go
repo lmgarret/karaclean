@@ -53,23 +53,19 @@ func (n *ShoutrrrNotifier) Send(url, message, title string) error {
 	return nil
 }
 
-// FormatNotification formats a per-rule notification message.
-// Format per CONTEXT.md:
+// FormatNotification formats a per-rule notification message body.
+// The body contains only stats prefixed with "Summary:" — the rule name and
+// dry-run indicator are conveyed via the separate title (FormatNotificationTitle).
 //
-//	[karaclean] <rule-name>
+//	Summary:
 //	deleted: N (X.X MB)   <- size only when TotalBytes > 0
 //	archived: N           <- only when > 0
 //	excepted: N           <- only when > 0
 //	errors: N             <- only when > 0
-//
-// Dry-run prefix: [DRY-RUN] [karaclean] <rule-name>.
-func FormatNotification(rs *RuleSummary, dryRun bool) string {
+func FormatNotification(rs *RuleSummary, _ bool) string {
 	var b strings.Builder
 
-	if dryRun {
-		fmt.Fprintf(&b, "[DRY-RUN] ")
-	}
-	fmt.Fprintf(&b, "[karaclean] %s", rs.RuleName)
+	fmt.Fprintf(&b, "Summary:")
 
 	if rs.Deleted > 0 {
 		if rs.TotalBytes > 0 {
