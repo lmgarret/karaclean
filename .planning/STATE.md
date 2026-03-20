@@ -142,6 +142,7 @@ None.
 
 ## Session Continuity
 
+Last activity: 2026-03-20 - Completed quick task 260320-khk: README has NOT been updated with the last two implementations, address that
 Last session: 2026-03-20T13:49:24Z
-Stopped at: Completed 260320-khk-PLAN.md
+Stopped at: Completed quick task 260320-khk
 Resume file: None
