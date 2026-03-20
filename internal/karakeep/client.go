@@ -130,6 +130,11 @@ func toEngineBookmark(b Bookmark) engine.Bookmark {
 		note = *b.Note
 	}
 
+	var size int64
+	if content2, err := b.Content.AsBookmarkContent2(); err == nil && content2.Size != nil {
+		size = int64(*content2.Size)
+	}
+
 	return engine.Bookmark{
 		ID:         b.Id,
 		CreatedAt:  createdAt,
@@ -138,5 +143,6 @@ func toEngineBookmark(b Bookmark) engine.Bookmark {
 		Source:     source,
 		Tags:       tags,
 		Note:       note,
+		Size:       size,
 	}
 }

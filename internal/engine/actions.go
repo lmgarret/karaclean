@@ -13,7 +13,24 @@ type ActionResult struct {
 	RuleName   string
 	Action     string
 	DryRun     bool
+	Size       int64
 	Err        error
+}
+
+// HumanSize formats bytes as a human-readable string using 1024-based units.
+func HumanSize(bytes int64) string {
+	if bytes < 1024 {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	units := []string{"KB", "MB", "GB", "TB"}
+	size := float64(bytes)
+	for _, unit := range units {
+		size /= 1024
+		if size < 1024 || unit == "TB" {
+			return fmt.Sprintf("%.1f %s", size, unit)
+		}
+	}
+	return fmt.Sprintf("%.1f TB", size)
 }
 
 // bookmarkSummary formats bookmark details for log output.
@@ -26,7 +43,11 @@ func bookmarkSummary(b Bookmark) string {
 	if len(b.Tags) > 0 {
 		tags = "[" + strings.Join(b.Tags, ", ") + "]"
 	}
-	return fmt.Sprintf("id=%s source=%s tags=%s", b.ID, source, tags)
+	s := fmt.Sprintf("id=%s source=%s tags=%s", b.ID, source, tags)
+	if b.Size > 0 {
+		s += fmt.Sprintf(" size=%s", HumanSize(b.Size))
+	}
+	return s
 }
 
 // ExecuteAction performs the given action on a bookmark. In dry-run mode, it logs
@@ -40,6 +61,7 @@ func ExecuteAction(ctx context.Context, api KarakeepAPI, action string, bookmark
 		RuleName:   ruleName,
 		Action:     action,
 		DryRun:     dryRun,
+		Size:       bookmark.Size,
 	}
 
 	if dryRun {
