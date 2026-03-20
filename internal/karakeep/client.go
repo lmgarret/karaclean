@@ -105,7 +105,7 @@ func (c *KarakeepClient) DeleteBookmark(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("delete bookmark %s: %w", id, err)
 	}
-	if resp.StatusCode() != http.StatusOK {
+	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusNoContent {
 		return fmt.Errorf("delete bookmark %s: unexpected status %d", id, resp.StatusCode())
 	}
 	return nil
