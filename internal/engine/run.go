@@ -94,26 +94,33 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 	}
 
 	// Phase 3: Dispatch per-rule notifications
-	if notifier != nil {
-		for i, rule := range rules {
-			rs := ruleSummaries[i]
-			if !rs.HasActivity() {
-				continue
-			}
-			channelURL := ResolveChannelURL(notifications, rule.Notify)
-			if channelURL == "" {
-				continue
-			}
-			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
-			msg := FormatNotification(rs, effectiveDryRun)
-			title := FormatNotificationTitle(rs.RuleName, effectiveDryRun)
-			if err := notifier.Send(channelURL, msg, title); err != nil {
-				log.Printf("notification failed for rule %q: %v", rule.Name, err)
-			}
-		}
-	}
+	dispatchNotifications(notifier, rules, ruleSummaries, notifications, dryRun)
 
 	return summary, nil
+}
+
+// dispatchNotifications sends a per-rule notification for every rule that has activity.
+// Failures are logged and do not abort the run.
+func dispatchNotifications(notifier Notifier, rules []config.Rule, summaries []*RuleSummary, notifications *config.Notifications, dryRun bool) {
+	if notifier == nil {
+		return
+	}
+	for i, rule := range rules {
+		rs := summaries[i]
+		if !rs.HasActivity() {
+			continue
+		}
+		channelURL := ResolveChannelURL(notifications, rule.Notify)
+		if channelURL == "" {
+			continue
+		}
+		effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
+		msg := FormatNotification(rs, effectiveDryRun)
+		title := FormatNotificationTitle(rs.RuleName, effectiveDryRun)
+		if err := notifier.Send(channelURL, msg, title); err != nil {
+			log.Printf("notification failed for rule %q: %v", rule.Name, err)
+		}
+	}
 }
 
 // ResolveRuleDryRun determines effective dry-run for a rule.

@@ -28,7 +28,7 @@ func (s *RuleSummary) HasActivity() bool {
 
 // Notifier sends a notification message to a URL. Implementations:
 // - ShoutrrrNotifier for production (sends via Shoutrrr library)
-// - mockNotifier in tests (records calls)
+// - mockNotifier in tests (records calls).
 type Notifier interface {
 	Send(url, message, title string) error
 }
@@ -62,7 +62,7 @@ func (n *ShoutrrrNotifier) Send(url, message, title string) error {
 //	excepted: N           <- only when > 0
 //	errors: N             <- only when > 0
 //
-// Dry-run prefix: [DRY-RUN] [karaclean] <rule-name>
+// Dry-run prefix: [DRY-RUN] [karaclean] <rule-name>.
 func FormatNotification(rs *RuleSummary, dryRun bool) string {
 	var b strings.Builder
 
