@@ -305,6 +305,27 @@ func TestDeleteBookmark_Success(t *testing.T) {
 	}
 }
 
+func TestDeleteBookmark_Success204(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("expected DELETE, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v1/bookmarks/bk-789" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	if err := client.DeleteBookmark(context.Background(), "bk-789"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestDeleteBookmark_ErrorStatus(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
