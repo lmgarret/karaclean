@@ -412,6 +412,123 @@ func TestValidate(t *testing.T) {
 	}
 }
 
+func validConfigWithNotifications() config.Config {
+	return config.Config{
+		Schedule: "0 3 * * *",
+		Notifications: &config.Notifications{
+			Channels: map[string]config.NotificationChannel{
+				"test-ch": {URL: "ntfy://ntfy.sh/test"},
+			},
+			Default: "test-ch",
+		},
+		Rules: []config.Rule{{
+			Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+			Action:     "archive",
+		}},
+	}
+}
+
+func TestValidateNotifications(t *testing.T) {
+	tests := []struct {
+		name    string
+		cfg     config.Config
+		wantErr []string
+	}{
+		{
+			name: "nil notifications no errors",
+			cfg:  validConfig(),
+		},
+		{
+			name: "channel with empty URL",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Notifications.Channels["bad"] = config.NotificationChannel{URL: ""}
+				return c
+			}(),
+			wantErr: []string{"notifications.channels.bad.url: url is required"},
+		},
+		{
+			name: "channel with invalid shoutrrr URL",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Notifications.Channels["bad"] = config.NotificationChannel{URL: "badscheme://foo"}
+				return c
+			}(),
+			wantErr: []string{"invalid shoutrrr URL"},
+		},
+		{
+			name: "default references undefined channel",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Notifications.Default = "nonexistent"
+				return c
+			}(),
+			wantErr: []string{"notifications.default: references undefined channel"},
+		},
+		{
+			name: "rule notify references undefined channel",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Rules[0].Notify = strPtr("nonexistent")
+				return c
+			}(),
+			wantErr: []string{"rules[0].notify: references undefined channel"},
+		},
+		{
+			name: "rule notify references defined channel no errors",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Rules[0].Notify = strPtr("test-ch")
+				return c
+			}(),
+		},
+		{
+			name: "no channels but default set",
+			cfg: func() config.Config {
+				c := validConfigWithNotifications()
+				c.Notifications.Channels = map[string]config.NotificationChannel{}
+				c.Notifications.Default = "missing"
+				return c
+			}(),
+			wantErr: []string{"references undefined channel"},
+		},
+		{
+			name: "rule notify set but notifications nil",
+			cfg: func() config.Config {
+				c := validConfig()
+				c.Rules[0].Notify = strPtr("some-channel")
+				return c
+			}(),
+			wantErr: []string{"rules[0].notify: references channel"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := tt.cfg.Validate()
+
+			if len(tt.wantErr) == 0 {
+				if len(errs) != 0 {
+					t.Errorf("expected 0 errors, got %d: %v", len(errs), errs)
+				}
+				return
+			}
+
+			var errStrs []string
+			for _, e := range errs {
+				errStrs = append(errStrs, e.Error())
+			}
+			allErrs := strings.Join(errStrs, "\n")
+
+			for _, want := range tt.wantErr {
+				if !strings.Contains(allErrs, want) {
+					t.Errorf("expected error containing %q, got errors:\n%s", want, allErrs)
+				}
+			}
+		})
+	}
+}
+
 func TestValidationErrors_Error(t *testing.T) {
 	ve := &config.ValidationErrors{
 		Errors: []config.ValidationError{
