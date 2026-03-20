@@ -107,11 +107,11 @@ func TestExecuteAction_DryRunLogOutput(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	mock := &mockAPI{}
-	bk := engine.Bookmark{ID: "bk-99", Source: "web", Tags: []string{"cleanup", "old"}}
+	bk := engine.Bookmark{ID: "bk-99", Source: "web", Tags: []string{"cleanup", "old"}, Size: 1048576}
 	_ = engine.ExecuteAction(context.Background(), mock, "archive", bk, "cleanup-rule", true)
 
 	output := buf.String()
-	for _, want := range []string{"DRY-RUN", "archive", "bk-99", "web", "cleanup", "old", "cleanup-rule"} {
+	for _, want := range []string{"DRY-RUN", "archive", "bk-99", "web", "cleanup", "old", "cleanup-rule", "size=1.0 MB"} {
 		if !strings.Contains(output, want) {
 			t.Errorf("log output %q does not contain %q", output, want)
 		}
@@ -124,14 +124,64 @@ func TestExecuteAction_LiveLogOutput(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	mock := &mockAPI{}
-	bk := engine.Bookmark{ID: "bk-50", Source: "rss", Tags: []string{"news"}}
+	bk := engine.Bookmark{ID: "bk-50", Source: "rss", Tags: []string{"news"}, Size: 2097152}
 	_ = engine.ExecuteAction(context.Background(), mock, "archive", bk, "rss-rule", false)
 
 	output := buf.String()
-	for _, want := range []string{"archive", "bk-50", "rss", "news", "rss-rule"} {
+	for _, want := range []string{"archive", "bk-50", "rss", "news", "rss-rule", "size=2.0 MB"} {
 		if !strings.Contains(output, want) {
 			t.Errorf("log output %q does not contain %q", output, want)
 		}
+	}
+}
+
+func TestHumanSize(t *testing.T) {
+	tests := []struct {
+		bytes int64
+		want  string
+	}{
+		{0, "0 B"},
+		{500, "500 B"},
+		{1024, "1.0 KB"},
+		{1536, "1.5 KB"},
+		{1048576, "1.0 MB"},
+		{1073741824, "1.0 GB"},
+	}
+	for _, tt := range tests {
+		got := engine.HumanSize(tt.bytes)
+		if got != tt.want {
+			t.Errorf("HumanSize(%d) = %q, want %q", tt.bytes, got, tt.want)
+		}
+	}
+}
+
+func TestBookmarkSummary_WithSize(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+
+	mock := &mockAPI{}
+	bk := engine.Bookmark{ID: "bk-1", Source: "web", Tags: []string{"test"}, Size: 2048}
+	_ = engine.ExecuteAction(context.Background(), mock, "archive", bk, "rule", true)
+
+	output := buf.String()
+	if !strings.Contains(output, "size=2.0 KB") {
+		t.Errorf("expected 'size=2.0 KB' in log output, got: %q", output)
+	}
+}
+
+func TestBookmarkSummary_ZeroSize(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+
+	mock := &mockAPI{}
+	bk := engine.Bookmark{ID: "bk-1", Source: "web", Tags: []string{"test"}, Size: 0}
+	_ = engine.ExecuteAction(context.Background(), mock, "archive", bk, "rule", true)
+
+	output := buf.String()
+	if strings.Contains(output, "size=") {
+		t.Errorf("expected no 'size=' in log output for zero size, got: %q", output)
 	}
 }
 
