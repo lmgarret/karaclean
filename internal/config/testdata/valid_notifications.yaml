@@ -4,7 +4,7 @@ notifications:
     my-ntfy:
       url: "ntfy://ntfy.sh/karaclean-alerts"
     slack-team:
-      url: "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook"
+      url: "ntfy://ntfy.sh/karaclean-slack-team"
   default: my-ntfy
 rules:
   - name: old-rss

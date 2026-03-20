@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lm/karaclean/internal/duration"
+	"github.com/nicholas-fedor/shoutrrr"
 	"github.com/robfig/cron/v3"
 )
 
@@ -45,6 +46,7 @@ func (c *Config) Validate() []ValidationError {
 
 	errs = append(errs, c.validateSchedule()...)
 	errs = append(errs, c.validateTimezone()...)
+	errs = append(errs, validateNotifications(c.Notifications, c.Rules)...)
 
 	if len(c.Rules) == 0 {
 		errs = append(errs, ValidationError{
@@ -169,6 +171,65 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 			Field:   prefix + ".lacksTag",
 			Message: "must not be empty",
 		})
+	}
+
+	return errs
+}
+
+// validateNotifications checks notification channel definitions and references.
+// Returns nil if notifications are not configured (opt-in).
+func validateNotifications(n *Notifications, rules []Rule) []ValidationError {
+	var errs []ValidationError
+	if n == nil {
+		// Check if any rule has notify set without a notifications block
+		for i, rule := range rules {
+			if rule.Notify != nil {
+				errs = append(errs, ValidationError{
+					Field:   fmt.Sprintf("rules[%d].notify", i),
+					Message: fmt.Sprintf("references channel %q but no notifications block configured", *rule.Notify),
+				})
+			}
+		}
+		return errs
+	}
+
+	// Validate each channel URL via Shoutrrr
+	for name, ch := range n.Channels {
+		if ch.URL == "" {
+			errs = append(errs, ValidationError{
+				Field:   fmt.Sprintf("notifications.channels.%s.url", name),
+				Message: "url is required",
+			})
+			continue
+		}
+		if _, err := shoutrrr.CreateSender(ch.URL); err != nil {
+			errs = append(errs, ValidationError{
+				Field:   fmt.Sprintf("notifications.channels.%s.url", name),
+				Message: fmt.Sprintf("invalid shoutrrr URL: %v", err),
+			})
+		}
+	}
+
+	// Validate default references a defined channel
+	if n.Default != "" {
+		if _, ok := n.Channels[n.Default]; !ok {
+			errs = append(errs, ValidationError{
+				Field:   "notifications.default",
+				Message: fmt.Sprintf("references undefined channel %q", n.Default),
+			})
+		}
+	}
+
+	// Validate per-rule notify references
+	for i, rule := range rules {
+		if rule.Notify != nil {
+			if _, ok := n.Channels[*rule.Notify]; !ok {
+				errs = append(errs, ValidationError{
+					Field:   fmt.Sprintf("rules[%d].notify", i),
+					Message: fmt.Sprintf("references undefined channel %q", *rule.Notify),
+				})
+			}
+		}
 	}
 
 	return errs

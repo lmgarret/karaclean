@@ -337,8 +337,8 @@ func TestLoad_ValidNotifications(t *testing.T) {
 	}
 	if ch, ok := cfg.Notifications.Channels["slack-team"]; !ok {
 		t.Error("expected channel 'slack-team' to exist")
-	} else if ch.URL != "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook" {
-		t.Errorf("slack-team URL = %q, want %q", ch.URL, "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook")
+	} else if ch.URL != "ntfy://ntfy.sh/karaclean-slack-team" {
+		t.Errorf("slack-team URL = %q, want %q", ch.URL, "ntfy://ntfy.sh/karaclean-slack-team")
 	}
 	if cfg.Notifications.Default != "my-ntfy" {
 		t.Errorf("default = %q, want %q", cfg.Notifications.Default, "my-ntfy")
