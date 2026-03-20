@@ -138,9 +138,10 @@ None.
 | 260319-tk0 | Add MIT License | 2026-03-19 | 0662a6e | [260319-tk0-choose-and-add-the-right-license-for-thi](./quick/260319-tk0-choose-and-add-the-right-license-for-thi/) |
 | 260319-uni | Per-rule dryRun override and richer action logs | 2026-03-19 | f34f3cb | [260319-uni-per-rule-dryrun-and-richer-deletion-logs](./quick/260319-uni-per-rule-dryrun-and-richer-deletion-logs/) |
 | 260320-emk | Display bookmark size in deletion logs and run summary | 2026-03-20 | 6fcbffc | [260320-emk-display-bookmark-size-in-deletion-logs-a](./quick/260320-emk-display-bookmark-size-in-deletion-logs-a/) |
+| 260320-khk | Update README and example config with per-rule dryRun, bookmark size, notifications | 2026-03-20 | 88c6c38 | [260320-khk-readme-has-not-been-updated-with-the-las](./quick/260320-khk-readme-has-not-been-updated-with-the-las/) |
 
 ## Session Continuity
 
-Last session: 2026-03-20T11:28:34.162Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-03-20T13:49:24Z
+Stopped at: Completed 260320-khk-PLAN.md
 Resume file: None
