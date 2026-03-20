@@ -1,0 +1,19 @@
+schedule: "0 3 * * *"
+notifications:
+  channels:
+    my-ntfy:
+      url: "ntfy://ntfy.sh/karaclean-alerts"
+    slack-team:
+      url: "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook"
+  default: my-ntfy
+rules:
+  - name: old-rss
+    notify: slack-team
+    conditions:
+      olderThan: "30d"
+    action: delete
+  - name: web-junk
+    conditions:
+      source: web
+      olderThan: "7d"
+    action: archive

@@ -318,6 +318,56 @@ rules:
 	}
 }
 
+func TestLoad_ValidNotifications(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_notifications.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Notifications == nil {
+		t.Fatal("expected Notifications to be non-nil")
+	}
+	if len(cfg.Notifications.Channels) != 2 {
+		t.Fatalf("expected 2 channels, got %d", len(cfg.Notifications.Channels))
+	}
+	if ch, ok := cfg.Notifications.Channels["my-ntfy"]; !ok {
+		t.Error("expected channel 'my-ntfy' to exist")
+	} else if ch.URL != "ntfy://ntfy.sh/karaclean-alerts" {
+		t.Errorf("my-ntfy URL = %q, want %q", ch.URL, "ntfy://ntfy.sh/karaclean-alerts")
+	}
+	if ch, ok := cfg.Notifications.Channels["slack-team"]; !ok {
+		t.Error("expected channel 'slack-team' to exist")
+	} else if ch.URL != "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook" {
+		t.Errorf("slack-team URL = %q, want %q", ch.URL, "slack://hook:TOKEN-A-TOKEN-B-TOKEN-C@webhook")
+	}
+	if cfg.Notifications.Default != "my-ntfy" {
+		t.Errorf("default = %q, want %q", cfg.Notifications.Default, "my-ntfy")
+	}
+
+	// Rules[0] has notify: slack-team
+	if cfg.Rules[0].Notify == nil {
+		t.Fatal("expected Rules[0].Notify to be non-nil")
+	}
+	if *cfg.Rules[0].Notify != "slack-team" {
+		t.Errorf("Rules[0].Notify = %q, want %q", *cfg.Rules[0].Notify, "slack-team")
+	}
+
+	// Rules[1] has no notify field
+	if cfg.Rules[1].Notify != nil {
+		t.Errorf("expected Rules[1].Notify to be nil, got %q", *cfg.Rules[1].Notify)
+	}
+}
+
+func TestLoad_NoNotifications(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_full.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Notifications != nil {
+		t.Errorf("expected Notifications to be nil for valid_full.yaml, got %+v", cfg.Notifications)
+	}
+}
+
 func TestResolvePath_Flag(t *testing.T) {
 	got := config.ResolvePath("explicit.yaml")
 	if got != "explicit.yaml" {
