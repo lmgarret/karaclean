@@ -71,6 +71,7 @@ Configuration is a single YAML file. See [`karaclean.example.yaml`](karaclean.ex
 | `schedule` | string | Yes | -- | Cron expression (5-field: minute hour day month weekday) |
 | `timezone` | string | No | UTC (with warning) | IANA timezone name (e.g., `America/New_York`) |
 | `dryRun` | bool | No | `false` | Log actions without executing mutations |
+| `notifications` | object | No | -- | Notification channels for per-rule action summaries (see [Notifications](#notifications)) |
 | `rules` | list | Yes | -- | List of cleanup rules (at least one required) |
 
 ### Rule Fields
@@ -81,6 +82,8 @@ Configuration is a single YAML file. See [`karaclean.example.yaml`](karaclean.ex
 | `conditions` | object | Yes | Matching criteria (all must match -- AND semantics) |
 | `unless` | object | No | Exception criteria (any match skips -- OR semantics) |
 | `action` | string | Yes | `archive` or `delete` |
+| `dryRun` | bool | No | Override global dry-run for this rule. `true` forces dry-run, `false` forces live mode, omitted inherits global setting. |
+| `notify` | string | No | Channel name for this rule's notification (overrides `default`). Must reference a channel defined in `notifications.channels`. |
 
 ### Conditions (AND semantics)
 
@@ -199,6 +202,27 @@ There are three ways to enable dry-run, listed in precedence order (highest firs
 
 When dry-run is active, the log output shows `DRY-RUN archive: bookmark <id> (rule: <name>)` for each action that would have been taken.
 
+### Per-Rule Override
+
+Individual rules can override the global dry-run setting with a per-rule `dryRun` field:
+
+```yaml
+rules:
+  - name: safe-archive
+    conditions:
+      olderThan: "30d"
+    action: archive
+    dryRun: true  # Always dry-run, regardless of global setting
+
+  - name: aggressive-delete
+    conditions:
+      olderThan: "90d"
+    action: delete
+    # Inherits global dryRun setting (no override)
+```
+
+Resolution: per-rule `dryRun` (if set) takes precedence over global `dryRun`. The CLI flag and env var set the global value; per-rule overrides apply on top.
+
 **Recommendation:** Always run with dry-run enabled when setting up new rules. Review the logs, then disable dry-run once you are satisfied with the behavior.
 
 ## CLI Reference
@@ -305,10 +329,63 @@ services:
 Karaclean logs structured information at key points:
 
 - **Startup:** Logs authentication check result, dry-run status, timezone (with a warning if defaulting to UTC), and the next scheduled run time.
-- **Each run:** Logs a summary line: `run complete: archived=N deleted=M no_match=K excepted=J errors=E`
+- **Each run:** Logs a summary line: `run complete: archived=N deleted=M no_match=K excepted=J errors=E total_size=X.X MB`
+- **Bookmark size:** Action log lines include human-readable file size (e.g., `size=1.2 MB`) when the bookmark has associated content. The run summary includes `total_size` showing total bytes processed (including dry-run actions).
 - **Immediate first run:** Karaclean executes a run immediately at startup (synchronous, before the cron scheduler begins), so you get feedback right away.
 - **Cron schedule:** Subsequent runs follow the configured cron schedule.
 - **Overlap protection:** If a run takes longer than the cron interval, the next scheduled run is automatically skipped (`SkipIfStillRunning`).
+
+## Notifications
+
+Karaclean can send per-rule action summaries to notification channels (Slack, ntfy, Telegram, and any service supported by [Shoutrrr](https://github.com/nicholas-fedor/shoutrrr)). Notifications are opt-in -- omit the `notifications` section to disable them entirely.
+
+### Configuration
+
+Add a `notifications` block to your config file:
+
+```yaml
+notifications:
+  channels:
+    my-ntfy:
+      url: "ntfy://ntfy.sh/karaclean-alerts"
+    slack-ops:
+      url: "slack://hook:TOKEN-A/TOKEN-B/TOKEN-C@webhook"
+  default: my-ntfy
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `channels` | map | Yes | Named notification channels, each with a Shoutrrr URL |
+| `default` | string | No | Channel name to use when a rule has no `notify` override |
+
+Channel URLs follow the [Shoutrrr URL format](https://github.com/nicholas-fedor/shoutrrr/blob/main/docs/services/overview.md). URLs are validated at startup -- an invalid URL prevents Karaclean from starting.
+
+### Per-Rule Channel Override
+
+Each rule can specify which channel receives its notifications using the `notify` field:
+
+```yaml
+rules:
+  - name: archive-old-rss
+    conditions:
+      olderThan: "30d"
+      source: rss
+    action: archive
+    notify: slack-ops  # Send this rule's summary to slack-ops instead of default
+```
+
+Channel resolution order:
+1. Rule's `notify` field (if set, must reference a defined channel)
+2. Global `default` channel (if set)
+3. Silent -- no notification sent for this rule
+
+### Message Format
+
+Each notification includes the rule name, action counts, and is sent only when the rule produced activity (archived, deleted, or errored bookmarks). Rules that only matched excepted bookmarks are silent.
+
+### Notification Failures
+
+Notification delivery is best-effort. If a notification fails to send, the error is logged but does not affect the run outcome -- bookmarks are still processed normally.
 
 ## Building from Source
 
