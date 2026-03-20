@@ -12,17 +12,22 @@ import (
 // RunSummary records the outcome of a single Run() invocation.
 // Field values sum to the total bookmark count: Archived + Deleted + NoMatch + Excepted + Errors.
 type RunSummary struct {
-	Archived int `json:"archived"`
-	Deleted  int `json:"deleted"`
-	NoMatch  int `json:"no_match"`
-	Excepted int `json:"excepted"`
-	Errors   int `json:"errors"`
+	Archived   int   `json:"archived"`
+	Deleted    int   `json:"deleted"`
+	NoMatch    int   `json:"no_match"`
+	Excepted   int   `json:"excepted"`
+	Errors     int   `json:"errors"`
+	TotalBytes int64 `json:"total_bytes"`
 }
 
 // String returns a key=value summary suitable for structured log output.
 func (s RunSummary) String() string {
-	return fmt.Sprintf("archived=%d deleted=%d no_match=%d excepted=%d errors=%d",
+	base := fmt.Sprintf("archived=%d deleted=%d no_match=%d excepted=%d errors=%d",
 		s.Archived, s.Deleted, s.NoMatch, s.Excepted, s.Errors)
+	if s.TotalBytes > 0 {
+		base += fmt.Sprintf(" total_size=%s", HumanSize(s.TotalBytes))
+	}
+	return base
 }
 
 // Run is the core orchestrator. It implements a collect-then-act pattern:
@@ -67,6 +72,7 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool)
 				case "delete":
 					summary.Deleted++
 				}
+				summary.TotalBytes += result.Size
 			}
 			matched = true
 			break
