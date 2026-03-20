@@ -199,7 +199,7 @@ func TestRun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := engine.Run(context.Background(), tt.api, tt.rules, tt.dryRun)
+			got, err := engine.Run(context.Background(), tt.api, tt.rules, tt.dryRun, nil, nil)
 			if err != nil {
 				t.Fatalf("Run() returned unexpected error: %v", err)
 			}
@@ -280,11 +280,239 @@ func TestResolveRuleDryRun(t *testing.T) {
 	}
 }
 
+// mockNotifier records Send calls for test assertions.
+type mockNotifier struct {
+	calls []notifierCall
+	err   error // error to return from Send
+}
+
+type notifierCall struct {
+	url     string
+	message string
+	title   string
+}
+
+func (m *mockNotifier) Send(url, message, title string) error {
+	m.calls = append(m.calls, notifierCall{url: url, message: message, title: title})
+	return m.err
+}
+
+// testNotifications builds a *config.Notifications for test use.
+func testNotifications(channels map[string]string, defaultCh string) *config.Notifications {
+	n := &config.Notifications{
+		Channels: make(map[string]config.NotificationChannel),
+		Default:  defaultCh,
+	}
+	for name, url := range channels {
+		n.Channels[name] = config.NotificationChannel{URL: url}
+	}
+	return n
+}
+
+func TestRunNotification_ActiveRule(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "alerts")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old, Size: 4096},
+	}}
+	rules := []config.Rule{
+		{Name: "cleanup", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	_, err := engine.Run(context.Background(), api, rules, false, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 1 {
+		t.Fatalf("expected 1 notification call, got %d", len(mn.calls))
+	}
+	if mn.calls[0].url != "ntfy://ntfy.sh/test" {
+		t.Errorf("url = %q, want ntfy://ntfy.sh/test", mn.calls[0].url)
+	}
+	if !strings.Contains(mn.calls[0].message, "[karaclean]") {
+		t.Errorf("message %q missing [karaclean]", mn.calls[0].message)
+	}
+	if !strings.Contains(mn.calls[0].message, "deleted:") {
+		t.Errorf("message %q missing deleted:", mn.calls[0].message)
+	}
+}
+
+func TestRunNotification_Override(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+	notifs := testNotifications(map[string]string{
+		"default-ch": "ntfy://ntfy.sh/default",
+		"override":   "ntfy://ntfy.sh/override",
+	}, "default-ch")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete", Notify: ptrStr("override")},
+	}
+
+	_, err := engine.Run(context.Background(), api, rules, false, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 1 {
+		t.Fatalf("expected 1 call, got %d", len(mn.calls))
+	}
+	if mn.calls[0].url != "ntfy://ntfy.sh/override" {
+		t.Errorf("url = %q, want override URL", mn.calls[0].url)
+	}
+}
+
+func TestRunNotification_Silent_NoActivity(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "alerts")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old, Favourited: true},
+	}}
+	rules := []config.Rule{
+		{
+			Name:       "excepted-only",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d")},
+			Unless:     &config.Exceptions{Favourited: ptrBool(true)},
+			Action:     "delete",
+		},
+	}
+
+	_, err := engine.Run(context.Background(), api, rules, false, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 0 {
+		t.Errorf("expected no notification for excepted-only rule, got %d calls", len(mn.calls))
+	}
+}
+
+func TestRunNotification_Silent_NoChannel(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "") // empty default
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "no-channel", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	_, err := engine.Run(context.Background(), api, rules, false, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 0 {
+		t.Errorf("expected no notification with no channel, got %d calls", len(mn.calls))
+	}
+}
+
+func TestRunNotification_NilNotifier(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "alerts")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	// Should not panic with nil notifier
+	summary, err := engine.Run(context.Background(), api, rules, false, notifs, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if summary.Deleted != 1 {
+		t.Errorf("summary.Deleted = %d, want 1", summary.Deleted)
+	}
+}
+
+func TestRunNotification_NilNotifications(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	// nil notifications, non-nil notifier: should not send anything
+	_, err := engine.Run(context.Background(), api, rules, false, nil, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 0 {
+		t.Errorf("expected no notification with nil notifications, got %d calls", len(mn.calls))
+	}
+}
+
+func TestRunNotification_FailureNonFatal(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{err: errors.New("send failed")}
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "alerts")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	summary, err := engine.Run(context.Background(), api, rules, false, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() should not return error on notification failure, got: %v", err)
+	}
+	if summary.Deleted != 1 {
+		t.Errorf("summary.Deleted = %d, want 1", summary.Deleted)
+	}
+}
+
+func TestRunNotification_DryRun(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+	mn := &mockNotifier{}
+	notifs := testNotifications(map[string]string{"alerts": "ntfy://ntfy.sh/test"}, "alerts")
+
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
+	}
+
+	_, err := engine.Run(context.Background(), api, rules, true, notifs, mn)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if len(mn.calls) != 1 {
+		t.Fatalf("expected 1 call, got %d", len(mn.calls))
+	}
+	if !strings.Contains(mn.calls[0].message, "[DRY-RUN]") {
+		t.Errorf("message %q missing [DRY-RUN]", mn.calls[0].message)
+	}
+}
+
 func TestRun_ListBookmarksError(t *testing.T) {
 	api := &mockAPI{listBookmarksErr: errors.New("api unreachable")}
 	rules := []config.Rule{{Name: "r1", Action: "archive"}}
 
-	got, err := engine.Run(context.Background(), api, rules, false)
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
 	if err == nil {
 		t.Fatal("expected error from Run(), got nil")
 	}
