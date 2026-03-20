@@ -7,12 +7,24 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
+// Notifications configures notification channels for per-rule action summaries.
+type Notifications struct {
+	Channels map[string]NotificationChannel `yaml:"channels"`
+	Default  string                         `yaml:"default"`
+}
+
+// NotificationChannel defines a single notification endpoint via Shoutrrr URL.
+type NotificationChannel struct {
+	URL string `yaml:"url"`
+}
+
 // Config represents the top-level karaclean configuration.
 type Config struct {
-	Timezone string `yaml:"timezone"`
-	Schedule string `yaml:"schedule"`
-	DryRun   bool   `yaml:"dryRun"`
-	Rules    []Rule `yaml:"rules"`
+	Timezone      string         `yaml:"timezone"`
+	Schedule      string         `yaml:"schedule"`
+	DryRun        bool           `yaml:"dryRun"`
+	Notifications *Notifications `yaml:"notifications"`
+	Rules         []Rule         `yaml:"rules"`
 }
 
 // Rule defines a single cleanup rule with conditions, exceptions, and an action.
@@ -22,6 +34,7 @@ type Rule struct {
 	Unless     *Exceptions `yaml:"unless"`
 	Action     string      `yaml:"action"`
 	DryRun     *bool       `yaml:"dryRun"`
+	Notify     *string     `yaml:"notify"`
 }
 
 // Conditions specifies the matching criteria for bookmarks.
