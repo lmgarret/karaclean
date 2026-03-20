@@ -15,12 +15,20 @@ func ptrBool(b bool) *bool   { return &b }
 func ptrStr(s string) *string { return &s }
 
 func TestRunSummary_String(t *testing.T) {
-	s := engine.RunSummary{Archived: 2, Deleted: 1, NoMatch: 5, Excepted: 3, Errors: 0}
+	s := engine.RunSummary{Archived: 2, Deleted: 1, NoMatch: 5, Excepted: 3, Errors: 0, TotalBytes: 1048576}
 	got := s.String()
-	for _, want := range []string{"archived=2", "deleted=1", "no_match=5", "excepted=3", "errors=0"} {
+	for _, want := range []string{"archived=2", "deleted=1", "no_match=5", "excepted=3", "errors=0", "total_size=1.0 MB"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("String() = %q, missing %q", got, want)
 		}
+	}
+}
+
+func TestRunSummary_String_ZeroBytes(t *testing.T) {
+	s := engine.RunSummary{Archived: 1, Deleted: 0, NoMatch: 0, Excepted: 0, Errors: 0, TotalBytes: 0}
+	got := s.String()
+	if strings.Contains(got, "total_size") {
+		t.Errorf("String() = %q, should not contain 'total_size' when TotalBytes=0", got)
 	}
 }
 
@@ -36,6 +44,7 @@ func TestRun(t *testing.T) {
 		want               engine.RunSummary
 		wantArchiveCalls   []string
 		wantDeleteCalls    []string
+		wantTotalBytes     int64
 	}{
 		{
 			name: "no bookmarks returns zero summary",
@@ -57,24 +66,26 @@ func TestRun(t *testing.T) {
 		{
 			name: "archive action increments Archived",
 			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
-				{ID: "bk-1", CreatedAt: oldCreatedAt},
+				{ID: "bk-1", CreatedAt: oldCreatedAt, Size: 5000},
 			}},
 			rules: []config.Rule{
 				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive"},
 			},
-			want:             engine.RunSummary{Archived: 1},
+			want:             engine.RunSummary{Archived: 1, TotalBytes: 5000},
 			wantArchiveCalls: []string{"bk-1"},
+			wantTotalBytes:   5000,
 		},
 		{
 			name: "delete action increments Deleted",
 			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
-				{ID: "bk-1", CreatedAt: oldCreatedAt},
+				{ID: "bk-1", CreatedAt: oldCreatedAt, Size: 2048},
 			}},
 			rules: []config.Rule{
 				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "delete"},
 			},
-			want:            engine.RunSummary{Deleted: 1},
+			want:            engine.RunSummary{Deleted: 1, TotalBytes: 2048},
 			wantDeleteCalls: []string{"bk-1"},
+			wantTotalBytes:  2048,
 		},
 		{
 			name: "excepted bookmark increments Excepted",
@@ -104,9 +115,9 @@ func TestRun(t *testing.T) {
 			wantArchiveCalls: []string{"bk-1"},
 		},
 		{
-			name: "action error increments Errors",
+			name: "action error increments Errors not TotalBytes",
 			api: &mockAPI{
-				listBookmarksRet:   []engine.Bookmark{{ID: "bk-1", CreatedAt: oldCreatedAt}},
+				listBookmarksRet:   []engine.Bookmark{{ID: "bk-1", CreatedAt: oldCreatedAt, Size: 9999}},
 				archiveBookmarkErr: errors.New("api down"),
 			},
 			rules: []config.Rule{
@@ -114,17 +125,19 @@ func TestRun(t *testing.T) {
 			},
 			want:             engine.RunSummary{Errors: 1},
 			wantArchiveCalls: []string{"bk-1"},
+			wantTotalBytes:   0,
 		},
 		{
 			name:   "dry run passes through and counts",
 			dryRun: true,
 			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
-				{ID: "bk-1", CreatedAt: oldCreatedAt},
+				{ID: "bk-1", CreatedAt: oldCreatedAt, Size: 3072},
 			}},
 			rules: []config.Rule{
 				{Name: "old-stuff", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive"},
 			},
-			want: engine.RunSummary{Archived: 1},
+			want:           engine.RunSummary{Archived: 1, TotalBytes: 3072},
+			wantTotalBytes: 3072,
 			// In dry-run, ExecuteAction skips the API call, so no archiveBookmarkCalls
 		},
 		{
@@ -166,8 +179,8 @@ func TestRun(t *testing.T) {
 		{
 			name: "mixed scenario",
 			api: &mockAPI{listBookmarksRet: []engine.Bookmark{
-				{ID: "bk-1", CreatedAt: oldCreatedAt},                           // matches rule1 -> archive
-				{ID: "bk-2", CreatedAt: oldCreatedAt, Favourited: true},         // matches conditions but excepted
+				{ID: "bk-1", CreatedAt: oldCreatedAt, Size: 4096},               // matches rule1 -> archive
+				{ID: "bk-2", CreatedAt: oldCreatedAt, Favourited: true, Size: 8192}, // matches conditions but excepted
 				{ID: "bk-3", CreatedAt: time.Now()},                             // matches no rule
 			}},
 			rules: []config.Rule{
@@ -178,8 +191,9 @@ func TestRun(t *testing.T) {
 					Action:     "archive",
 				},
 			},
-			want:             engine.RunSummary{Archived: 1, Excepted: 1, NoMatch: 1},
+			want:             engine.RunSummary{Archived: 1, Excepted: 1, NoMatch: 1, TotalBytes: 4096},
 			wantArchiveCalls: []string{"bk-1"},
+			wantTotalBytes:   4096,
 		},
 	}
 
