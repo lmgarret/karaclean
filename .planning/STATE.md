@@ -1,10 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-03-20T11:28:34.167Z"
+milestone: v1.1
+milestone_name: Notifications
+status: milestone_complete
+stopped_at: v1.1 milestone complete
+last_updated: "2026-03-20T15:00:00.000Z"
+last_activity: "2026-03-20 - Completed v1.1 Notifications milestone"
 progress:
   total_phases: 1
   completed_phases: 1
@@ -16,10 +17,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-19 after v1.0 milestone)
+See: .planning/PROJECT.md (updated 2026-03-20 after v1.1 milestone)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 01 — notification-system-send-per-rule-action-summaries-to-configurable-channels-slack-ntfy-telegram-etc-with-global-default-channel-and-per-rule-channel-override
+**Current focus:** v1.1 shipped — planning next milestone
 
 ## Current Position
 

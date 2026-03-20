@@ -61,6 +61,52 @@
 
 ---
 
+## Milestone: v1.1 — Notifications
+
+**Shipped:** 2026-03-20
+**Phases:** 1 | **Plans:** 3 | **Quick Tasks:** 2 (260320-lfo, 260320-ls1)
+
+### What Was Built
+
+- Shoutrrr-backed notification system: per-rule channel dispatch after bookmark evaluation
+- `Notifications` config block with named channels (Shoutrrr URLs), global default, and per-rule `notify` override
+- `RuleSummary` accumulator with `HasActivity()` gate — silent when nothing happened
+- `Notifier` interface with `ShoutrrrNotifier` implementation (testable without live services)
+- `ResolveChannelURL`: rule override → global default → nil (silent) resolution chain
+- `FormatNotification` / `FormatNotificationTitle` producing `Summary:\ndeleted: N | archived: N` messages
+- HTTP 204 fix: `DeleteBookmark` now correctly accepts 204 No Content as success
+
+### What Worked
+
+- **Notifier interface pattern** — decoupling `ShoutrrrNotifier` behind an interface meant all dispatch logic was unit-tested without needing a live Shoutrrr endpoint. Zero friction.
+- **`*Notifications` nil pointer for opt-in** — no feature flag, no boolean toggle. Nil = feature absent. Consistent with the pointer-types-for-optional-config pattern from v1.0.
+- **Quick tasks for post-ship fixes** — both bugs (HTTP 204, title duplication) were discovered in production use and fixed immediately as quick tasks without disrupting the milestone workflow.
+- **Shoutrrr URL validation at config load** — fail-fast before any rules run. No "worked fine until first notification" failures.
+
+### What Was Inefficient
+
+- **HTTP 204 bug shipped with the milestone** — the Karakeep API returns 204 for DELETE (not 200), but the client only accepted 200. This was a testable property that the plan didn't cover. The quick task fix was fast, but the defect shouldn't have shipped.
+- **Title duplication in notification body** — initial message format duplicated the rule name in both the title and body. Noticed immediately in first real use; fixed in a quick task. A review of the actual rendered output before shipping would have caught it.
+
+### Patterns Established
+
+- **Post-milestone quick tasks are the right tool for polish** — minor UX/format issues discovered during real use are correctly handled as quick tasks, not phase work. They're small, reversible, and don't need research or planning overhead.
+- **Human-verification items (live Shoutrrr delivery)** — the VERIFICATION.md `human_needed` status is the right signal. Don't block milestone completion on items that require live external services; note them and ship.
+
+### Key Lessons
+
+1. **Test the actual rendered output of format functions end-to-end in tests.** The notification body format had title duplication that unit tests didn't expose because they tested the format function in isolation without considering what the title field already contained.
+2. **HTTP response code coverage should be part of HTTP client plan templates.** DELETE → 204, POST → 201 — common patterns that should be in the plan's `verify` criteria by default, not discovered post-ship.
+3. **Quick tasks are high-leverage post-ship polish.** Two defects shipped, two quick tasks fixed them within the same session. No ceremony, no ceremony overhead.
+
+### Cost Observations
+
+- Model mix: ~80% opus (planner, executor), ~20% sonnet (verifier)
+- Sessions: 1 session
+- Notable: Short milestone (1 phase, 3 plans) — fast to execute. Quick task cycle time was under 5 minutes each.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -68,14 +114,18 @@
 | Milestone | Sessions | Phases | Key Change |
 |-----------|----------|--------|------------|
 | v1.0 | ~3 | 10 | Initial project — full greenfield build |
+| v1.1 | 1 | 1 | Additive feature milestone — quick cycle, 2 post-ship quick fixes |
 
 ### Cumulative Quality
 
 | Milestone | Go Tests | Verification Score | LOC |
 |-----------|----------|--------------------|-----|
 | v1.0 | All pass (race-clean) | 99/100 must-haves | ~11,168 |
+| v1.1 | All pass (race-clean) | 16/16 must-haves (1 human item) | ~12,372 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Run the verifier after every phase — don't save it for the milestone audit.
 2. Research-first pays back on phases involving external tooling with breaking changes.
+3. HTTP response code coverage (204 for DELETE, 201 for POST) should be in plan verify criteria by default.
+4. Quick tasks are the right tool for post-ship format/polish fixes — fast cycle, no overhead.

@@ -5,6 +5,7 @@
 Karaclean is a Docker sidecar for the Karakeep bookmark manager that automatically archives and deletes bookmarks based on user-defined YAML rules. Users write declarative rules with conditions (age, source, status, tags), exceptions (protect starred/noted/tagged bookmarks), and actions (archive or delete). It runs on a cron schedule as a production Docker sidecar, enforcing cleanup rules via Karakeep's HTTP API.
 
 **v1.0 shipped 2026-03-19.** 11,168 lines of Go, 10 phases, 20 plans. All 20 v1 requirements satisfied.
+**v1.1 shipped 2026-03-20.** Added notification system via Shoutrrr. 12,372 lines of Go.
 
 ## Core Value
 
@@ -26,6 +27,12 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 - ✓ Config validation rejects unknown fields at startup (strict YAML parsing) — v1.0
 - ✓ GitHub Actions CI: test with -race, golangci-lint v2, Docker build/push — v1.0
 
+### Validated
+
+- ✓ Per-rule notification dispatch via Shoutrrr (Slack, ntfy, Telegram, etc.) with global default and per-rule channel override — v1.1
+- ✓ Notification messages include action counts, human-readable `Summary:` prefix, dry-run indication — v1.1
+- ✓ Best-effort delivery — notification failures logged, not fatal — v1.1
+
 ### Active
 
 - [ ] Per-run deletion cap — halt if a single run would delete more than N bookmarks (SAFE-01)
@@ -41,13 +48,13 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 - Multi-user support — single API key per container; additive if needed
 - Direct database access — HTTP API only to stay decoupled from Karakeep internals
 - Reading progress / highlights / list membership conditions — require N+1 API calls; defer to v2+
-- Push notifications / alerting — out of scope for v1
+- Push notifications / alerting — ~~out of scope for v1~~ delivered in v1.1 via Shoutrrr
 
 ## Context
 
-- **Status:** v1.0 shipped. Fully functional bookmark GC sidecar.
-- **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config
-- **LOC:** ~11,168 Go | 121 files in v1.0
+- **Status:** v1.1 shipped. Fully functional bookmark GC sidecar with notification support.
+- **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config, github.com/nicholas-fedor/shoutrrr for multi-channel notifications
+- **LOC:** ~12,372 Go | 123 files in v1.1
 - **Submodule:** `karakeep-upstream/` contains Karakeep's source for API reference; do not modify it
 - **Karakeep API:** REST at `/api/v1`, Bearer token auth, cursor-based pagination
 - **Archive action:** `PATCH /v1/bookmarks/{id}` with `{ "archived": true }`
@@ -80,6 +87,12 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 | Tests required every phase | User requirement — all phases include unit tests alongside implementation | ✓ Complied throughout |
 | golangci-lint v2 (not v1) | v2 is current; `gosimple` merged into `staticcheck`; `version: "2"` format | ✓ Correct — v1 format would have caused CI failures |
 | Single-user per instance | Simplifies auth and rule scoping; multi-user is additive | ✓ Good |
+| `*Notifications` (nil pointer) | Nil = notifications opt-in disabled; no validation errors when absent | ✓ Good |
+| Shoutrrr URL validation at config load | Fail-fast on invalid URLs before any rules run | ✓ Good |
+| `Notifier` interface for dispatch | Enables unit-testable notification dispatch without live external services | ✓ Good |
+| `Run()` trailing params for notifier | Backward-compatible signature extension — callers without notifications pass nil | ✓ Good |
+| `Summary:` prefix in message body | Avoids title duplication; cleaner message format | ✓ Good — improved after initial shipping |
+| HTTP 204 accepted as DELETE success | Karakeep returns 204 No Content on delete; 200 was incorrect expectation | ✓ Fixed — regression in v1.0 |
 
 ---
-*Last updated: 2026-03-19 after v1.0 milestone*
+*Last updated: 2026-03-20 after v1.1 milestone*
