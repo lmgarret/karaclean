@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/lm/karaclean/internal/engine"
 )
 
 func TestRequireEnv(t *testing.T) {
@@ -75,13 +80,61 @@ func TestResolveDryRun(t *testing.T) {
 
 // containsStr is a helper to avoid importing strings in test file.
 func containsStr(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		func() bool {
-			for i := 0; i <= len(s)-len(substr); i++ {
-				if s[i:i+len(substr)] == substr {
-					return true
-				}
-			}
-			return false
-		}())
+	return strings.Contains(s, substr)
+}
+
+// testAPI is a minimal mock implementing only what validateListNames needs.
+type testAPI struct {
+	listListsRet []engine.ListInfo
+	listListsErr error
+}
+
+func (t *testAPI) CheckAuth(ctx context.Context) error                                    { return nil }
+func (t *testAPI) ListBookmarks(ctx context.Context) ([]engine.Bookmark, error)           { return nil, nil }
+func (t *testAPI) ArchiveBookmark(ctx context.Context, id string) error                   { return nil }
+func (t *testAPI) DeleteBookmark(ctx context.Context, id string) error                    { return nil }
+func (t *testAPI) ListLists(ctx context.Context) ([]engine.ListInfo, error)               { return t.listListsRet, t.listListsErr }
+func (t *testAPI) GetListBookmarks(ctx context.Context, listID string) ([]string, error)  { return nil, nil }
+
+func TestValidateListNames(t *testing.T) {
+	api := &testAPI{
+		listListsRet: []engine.ListInfo{
+			{ID: "1", Name: "Read Later"},
+			{ID: "2", Name: "RSS Feeds"},
+		},
+	}
+	err := validateListNames(context.Background(), api, []string{"Read Later", "RSS Feeds"})
+	if err != nil {
+		t.Fatalf("expected nil error, got: %v", err)
+	}
+}
+
+func TestValidateListNames_Missing(t *testing.T) {
+	api := &testAPI{
+		listListsRet: []engine.ListInfo{
+			{ID: "1", Name: "Read Later"},
+		},
+	}
+	err := validateListNames(context.Background(), api, []string{"Read Later", "No Such List", "Also Missing"})
+	if err == nil {
+		t.Fatal("expected error for missing list names")
+	}
+	// Verify ALL missing names are reported (D-13)
+	msg := err.Error()
+	if !strings.Contains(msg, "No Such List") || !strings.Contains(msg, "Also Missing") {
+		t.Errorf("error should list all missing names, got: %s", msg)
+	}
+}
+
+func TestValidateListNames_APIError(t *testing.T) {
+	api := &testAPI{
+		listListsErr: fmt.Errorf("connection refused"),
+	}
+	err := validateListNames(context.Background(), api, []string{"Read Later"})
+	if err == nil {
+		t.Fatal("expected error when ListLists fails")
+	}
+	if !strings.Contains(err.Error(), "validating list names") {
+		t.Errorf("error %q does not contain 'validating list names'", err.Error())
+	}
 }
