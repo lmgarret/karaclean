@@ -11,7 +11,7 @@ import (
 // MatchesConditions returns true if the bookmark satisfies all non-nil conditions (AND semantics).
 // Short-circuits on first mismatch. The runTime parameter is captured once per run for consistency.
 // Duration strings in conditions are assumed pre-validated by config.Validate().
-func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time) bool {
+func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time, listSets map[string]map[string]bool) bool {
 	if c == nil {
 		return true
 	}
@@ -40,6 +40,19 @@ func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time) bool
 		return false
 	}
 
+	if c.InList != nil {
+		found := false
+		for _, listName := range c.InList {
+			if set, ok := listSets[listName]; ok && set[b.ID] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -62,7 +75,7 @@ func hasTag(tags []string, tag string) bool {
 
 // MatchesExceptions returns true if the bookmark is protected by any exception clause (OR semantics).
 // Short-circuits on first match. Returns false for nil Exceptions.
-func MatchesExceptions(b Bookmark, ex *config.Exceptions) bool {
+func MatchesExceptions(b Bookmark, ex *config.Exceptions, listSets map[string]map[string]bool) bool {
 	if ex == nil {
 		return false
 	}
@@ -91,6 +104,14 @@ func MatchesExceptions(b Bookmark, ex *config.Exceptions) bool {
 	if ex.Archived != nil {
 		if b.Archived == *ex.Archived {
 			return true
+		}
+	}
+
+	if ex.InList != nil {
+		for _, listName := range ex.InList {
+			if set, ok := listSets[listName]; ok && set[b.ID] {
+				return true
+			}
 		}
 	}
 

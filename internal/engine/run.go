@@ -59,10 +59,10 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 	for _, b := range bookmarks {
 		matched := false
 		for ruleIdx, rule := range rules {
-			if !MatchesConditions(b, rule.Conditions, runTime) {
+			if !MatchesConditions(b, rule.Conditions, runTime, nil) {
 				continue
 			}
-			if MatchesExceptions(b, rule.Unless) {
+			if MatchesExceptions(b, rule.Unless, nil) {
 				summary.Excepted++
 				ruleSummaries[ruleIdx].Excepted++
 				matched = true

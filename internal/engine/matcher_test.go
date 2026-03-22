@@ -250,7 +250,7 @@ func TestMatchesConditions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := engine.MatchesConditions(tt.bookmark, tt.conds, runTime)
+			got := engine.MatchesConditions(tt.bookmark, tt.conds, runTime, nil)
 			if got != tt.want {
 				t.Errorf("MatchesConditions() = %v, want %v", got, tt.want)
 			}
@@ -396,7 +396,143 @@ func TestMatchesExceptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := engine.MatchesExceptions(tt.bookmark, tt.exceptions)
+			got := engine.MatchesExceptions(tt.bookmark, tt.exceptions, nil)
+			if got != tt.want {
+				t.Errorf("MatchesExceptions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatchesConditions_InList(t *testing.T) {
+	runTime := time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC)
+
+	listSets := map[string]map[string]bool{
+		"Read Later": {"bk-1": true, "bk-2": true},
+		"RSS Feeds":  {"bk-3": true},
+	}
+
+	tests := []struct {
+		name     string
+		bookmark engine.Bookmark
+		conds    *config.Conditions
+		listSets map[string]map[string]bool
+		want     bool
+	}{
+		{
+			name:     "inList single match",
+			bookmark: engine.Bookmark{ID: "bk-1", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"Read Later"}},
+			listSets: listSets,
+			want:     true,
+		},
+		{
+			name:     "inList single no match",
+			bookmark: engine.Bookmark{ID: "bk-3", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"Read Later"}},
+			listSets: listSets,
+			want:     false,
+		},
+		{
+			name:     "inList OR semantics bookmark in second list",
+			bookmark: engine.Bookmark{ID: "bk-3", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"Read Later", "RSS Feeds"}},
+			listSets: listSets,
+			want:     true,
+		},
+		{
+			name:     "inList OR semantics bookmark in neither list",
+			bookmark: engine.Bookmark{ID: "bk-99", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"Read Later", "RSS Feeds"}},
+			listSets: listSets,
+			want:     false,
+		},
+		{
+			name:     "nil InList ignores check (backward compat)",
+			bookmark: engine.Bookmark{ID: "bk-99", CreatedAt: runTime},
+			conds:    &config.Conditions{},
+			listSets: listSets,
+			want:     true,
+		},
+		{
+			name:     "nil listSets with non-nil InList returns false",
+			bookmark: engine.Bookmark{ID: "bk-1", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"Read Later"}},
+			listSets: nil,
+			want:     false,
+		},
+		{
+			name:     "case_sensitive_no_match",
+			bookmark: engine.Bookmark{ID: "bk-1", CreatedAt: runTime},
+			conds:    &config.Conditions{InList: config.StringOrSlice{"read later"}},
+			listSets: listSets,
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := engine.MatchesConditions(tt.bookmark, tt.conds, runTime, tt.listSets)
+			if got != tt.want {
+				t.Errorf("MatchesConditions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatchesExceptions_InList(t *testing.T) {
+	listSets := map[string]map[string]bool{
+		"Read Later": {"bk-1": true, "bk-2": true},
+		"RSS Feeds":  {"bk-3": true},
+	}
+
+	tests := []struct {
+		name       string
+		bookmark   engine.Bookmark
+		exceptions *config.Exceptions
+		listSets   map[string]map[string]bool
+		want       bool
+	}{
+		{
+			name:       "inList protects bookmark in list",
+			bookmark:   engine.Bookmark{ID: "bk-1"},
+			exceptions: &config.Exceptions{InList: config.StringOrSlice{"Read Later"}},
+			listSets:   listSets,
+			want:       true,
+		},
+		{
+			name:       "inList does not protect bookmark not in list",
+			bookmark:   engine.Bookmark{ID: "bk-99"},
+			exceptions: &config.Exceptions{InList: config.StringOrSlice{"Read Later"}},
+			listSets:   listSets,
+			want:       false,
+		},
+		{
+			name:       "inList OR semantics bookmark in first list",
+			bookmark:   engine.Bookmark{ID: "bk-1"},
+			exceptions: &config.Exceptions{InList: config.StringOrSlice{"Read Later", "RSS Feeds"}},
+			listSets:   listSets,
+			want:       true,
+		},
+		{
+			name:       "nil InList ignores check (backward compat)",
+			bookmark:   engine.Bookmark{ID: "bk-1"},
+			exceptions: &config.Exceptions{},
+			listSets:   listSets,
+			want:       false,
+		},
+		{
+			name:       "case_sensitive_no_match",
+			bookmark:   engine.Bookmark{ID: "bk-1"},
+			exceptions: &config.Exceptions{InList: config.StringOrSlice{"read later"}},
+			listSets:   listSets,
+			want:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := engine.MatchesExceptions(tt.bookmark, tt.exceptions, tt.listSets)
 			if got != tt.want {
 				t.Errorf("MatchesExceptions() = %v, want %v", got, tt.want)
 			}
