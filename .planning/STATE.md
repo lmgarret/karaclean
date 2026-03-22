@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-22T18:07:14.858Z"
+milestone: v1.3
+milestone_name: Error Notification on Invalid Config
+status: complete
+stopped_at: Milestone v1.3 completed and archived
+last_updated: "2026-03-22T19:30:00.000Z"
 last_activity: 2026-03-22
 progress:
   total_phases: 1
@@ -17,125 +17,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-20 after v1.1 milestone)
+See: .planning/PROJECT.md (updated 2026-03-22 after v1.3 milestone)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 01 — error-notification-on-invalid-config
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 01 (error-notification-on-invalid-config) — EXECUTING
-Plan: 1 of 1
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 2
-- Average duration: 4min
-- Total execution time: 0.13 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01 | 2 | 8min | 4min |
-
-**Recent Trend:**
-
-- Last 5 plans: 01-01 (5min), 01-02 (3min)
-- Trend: stable
-
-*Updated after each plan completion*
-| Phase 01 P01 | 5min | 2 tasks | 11 files |
-| Phase 01 P02 | 3min | 2 tasks | 3 files |
-| Phase 03 P01 | 2min | 2 tasks | 8 files |
-| Phase 03 P02 | 2min | 1 tasks | 2 files |
-| Phase 04 P01 | 2min | 2 tasks | 2 files |
-| Phase 04 P02 | 1min | 1 tasks | 2 files |
-| Phase 05 P01 | 1min | 2 tasks | 2 files |
-| Phase 05 P02 | 1min | 1 tasks | 2 files |
-| Phase 06 P02 | 2min | 2 tasks | 4 files |
-| Phase 06 P01 | 2min | 2 tasks | 6 files |
-| Phase 07 P01 | 2min | 2 tasks | 2 files |
-| Phase 07 P02 | 1min | 1 tasks | 1 files |
-| Phase 08 P01 | 4min | 2 tasks | 7 files |
-| Phase 08 P02 | 2min | 2 tasks | 4 files |
-| Phase 09 P01 | 2min | 2 tasks | 1 files |
-| Phase 10 P01 | 3min | 2 tasks | 7 files |
-| Phase 10 P02 | 2min | 2 tasks | 1 files |
-| Phase 01 P01 | 3min | 2 tasks | 6 files |
-| Phase 01 P02 | 2min | 1 tasks | 2 files |
-| Phase 01 P03 | 2min | 2 tasks | 3 files |
-| Phase 01 P01 | 4min | 2 tasks | 10 files |
-| Phase 01 P02 | 3min | 2 tasks | 4 files |
-| Phase 01 P03 | 4min | 2 tasks | 4 files |
-| Phase 01 P01 | 3min | 2 tasks | 8 files |
+Phase: Complete — all v1.3 phases shipped
+Plan: N/A
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Roadmap: 8 phases derived from 20 v1 requirements at fine granularity
-- Research: Safety features (strict YAML, auth check, dry-run) are foundational, not polish
-- 01-01: Used go.yaml.in/yaml/v3 (maintained fork) over gopkg.in/yaml.v3 (unmaintained)
-- 01-01: Pointer types for optional config fields to distinguish nil from zero-value
-- 01-01: No custom UnmarshalYAML methods to preserve KnownFields strict parsing
-- 01-02: Validate() returns []ValidationError slice for caller flexibility; ValidationErrors wraps for error interface
-- 01-02: Source enum values from Karakeep API: rss, web, api, mobile, extension, cli, import
-- 02-01: Wrapper named KarakeepClient (not Client) — oapi-codegen generates Client/NewClient in same package, name collision
-- 02-01: engine.Bookmark maps: Id→ID, CreatedAt string→time.Time (RFC3339), *BookmarkSource→string, *string Note→string
-- 02-02: Startup order: config.Load → requireEnv(KARAKEEP_URL) → requireEnv(KARAKEEP_API_KEY) → NewKarakeepClient → CheckAuth
-- 03-01: Duration parser in internal/duration/ (shared package) to avoid import cycle between config and engine
-- 03-01: Zero durations (0h, 0d) accepted as valid -- matches all bookmarks
-- 03-01: Fixed day counts: mo=30d, y=365d (deterministic, appropriate for GC retention)
-- 03-02: Strictly-greater-than semantics for olderThan (exact boundary does not match)
-- 03-02: duration.Parse error intentionally ignored in matcher (config validation guarantees valid format)
-- [Phase 04]: Case-sensitive tag matching with == (no strings.EqualFold)
-- [Phase 04]: No nil-guard for Tags slice -- Go range over nil is safe
-- [Phase 05]: HasNote uses strings.TrimSpace to treat whitespace-only notes as empty
-- [Phase 05]: OR semantics with short-circuit: first matching exception returns true immediately
-- [Phase 05]: Mirrored existing conditions.hasTag validation pattern for unless.hasTag
-- [Phase 06]: DryRun is plain bool (not *bool) since false zero-value is correct default (live mode)
-- [Phase 06]: resolveDryRun takes pre-resolved args for testability; flag.Visit detects explicit --dry-run
-- [Phase 06]: ActionResult struct carries error field instead of returning error separately -- enables log-and-continue pattern in orchestrator
-- [Phase 06]: ExecuteAction uses log.Printf for DRY-RUN and ERROR output, consistent with existing stdlib logging
-- [Phase 07]: No new dependencies -- Run() wires existing engine components only
-- [Phase 07]: RunSummary uses value receiver String() for idiomatic Go formatting
-- [Phase 07]: context.Background() used since no signal handling yet (Phase 8 will add cancellation)
-- [Phase 08]: 5-field cron only via explicit cron.NewParser descriptor (no seconds field)
-- [Phase 08]: Empty timezone passes validation -- defaults to UTC at runtime (not at validation time)
-- [Phase 08]: Embedded timezone database via time/tzdata for scratch images
-- [Phase 08]: Run-on-start executes synchronously before cron.Start() for early error detection
-- [Phase 08]: SkipIfStillRunning prevents overlapping cron runs
-- [Phase 09]: Corrected Config Validation docs: name field not validated at startup despite being semantically required
-- [Phase 10]: Refactored Validate() into helper functions to reduce cyclomatic complexity below gocyclo threshold of 15
-- [Phase 10]: No separate actions/cache step -- actions/setup-go v6 has built-in caching
-- [Phase 01]: Used ntfy URLs in testdata instead of Slack placeholders (Shoutrrr validates URL format at CreateSender time)
-- [Phase 01]: Notifications is *Notifications (nil = opt-in disabled, no validation errors)
-- [Phase 01]: Shoutrrr URL validation via CreateSender at config load time (fail-fast)
-- [Phase 01]: Notifier interface uses Send(url, message, title) for testable notification dispatch
-- [Phase 01]: main.go creates notifier only when cfg.Notifications is non-nil (nil = no Shoutrrr overhead)
-- [Phase 01]: Run() signature extended with trailing params (notifications, notifier) for backward compat
-- [Phase 01]: StringOrSlice uses custom UnmarshalYAML with yaml.Node for KnownFields(true) compatibility
-- [Phase 01]: KarakeepClient gets stub methods for interface compliance; plan 02 implements
-- [Phase 01]: ListLists does not paginate (API returns all lists in one call)
-- [Phase 01]: validateListNames collects ALL missing names before returning error (D-13)
-- [Phase 01]: PreloadListSets exported for direct testability; listSets passed as parameter for thread safety
-- [Phase 01]: ConfigErrorNotifier interface in config package mirrors engine.Notifier to avoid import cycle
-- [Phase 01]: Variadic notifier parameter on Load() for backward compatibility
-- [Phase 01]: Lenient fallback uses notificationsOnly struct without KnownFields for unknown-field error recovery
 
 ### Roadmap Evolution
 
-- Phase 9 added: Documentation: extensive README, CLI and Docker image usage docs
-- Phase 10 added: CI: run tests, lint, and build docker image
-- Phase 1 (next milestone) added: Notification system with per-rule channel routing (Slack, ntfy, Telegram, global default + per-rule override)
-- Phase 1 added: List-based bookmark exclusion — exclude bookmarks from rule actions if they belong to specified lists
-- Phase 1 added: Error notification on invalid config
+See ROADMAP.md — 4 milestones shipped (v1.0–v1.3).
 
 ### Pending Todos
 
@@ -143,7 +43,7 @@ None.
 
 ### Blockers/Concerns
 
-- Pitfall (noted, not blocking): Karakeep config source validation missing "singlefile" — OpenAPI spec includes it, Phase 1 validation does not. Monitor if it causes issues in Phase 3+.
+- Pitfall (noted, not blocking): Karakeep config source validation missing "singlefile" — OpenAPI spec includes it, Phase 1 validation does not.
 
 ### Quick Tasks Completed
 
@@ -161,6 +61,6 @@ None.
 ## Session Continuity
 
 Last activity: 2026-03-22
-Last session: 2026-03-22T18:07:14.854Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-03-22
+Stopped at: Milestone v1.3 completed and archived
 Resume file: None

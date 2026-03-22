@@ -152,6 +152,45 @@
 
 ---
 
+## Milestone: v1.3 — Error Notification on Invalid Config
+
+**Shipped:** 2026-03-22
+**Phases:** 1 | **Plans:** 1
+
+### What Was Built
+
+- `notifyOnError` opt-in boolean on `Notifications` struct — sends error notification to default channel when config validation fails at startup
+- Two-pass `Load()`: strict YAML decode → validate → notify on failure; lenient fallback for decode errors
+- `ConfigErrorNotifier` interface in config package — mirrors `engine.Notifier` to avoid import cycle
+- `SendConfigError` best-effort dispatch: logs failure, never propagates; original error always returned
+- `lenientNotify` + `notificationsOnly` struct for extracting notifications from files rejected by `KnownFields(true)`
+
+### What Worked
+
+- **Import cycle avoidance via local interface** — defining `ConfigErrorNotifier` in `config` package rather than importing `engine.Notifier` prevented the `config -> engine -> config` cycle. Standard Go pattern, applied cleanly.
+- **Variadic parameter for backward compatibility** — `Load(path, ...ConfigErrorNotifier)` meant zero changes to existing callers. All existing tests pass without modification.
+- **TDD cycle** — failing tests committed first, implementation committed second. Clean red-green commits.
+
+### What Was Inefficient
+
+- Nothing notable — single-plan milestone with straightforward implementation. The only minor deviation was adjusting testdata from a structural YAML error to an unknown-field error (the lenient fallback handles `KnownFields` rejections, not actual parse failures).
+
+### Patterns Established
+
+- **`ConfigErrorNotifier` local interface pattern** — when a package needs to call a function from a package that depends on it, define a local interface and pass the implementation from the wiring layer (`main.go`). Established for the config-engine boundary.
+
+### Key Lessons
+
+1. **Lenient fallback must match the error mode it's designed for.** The lenient re-parse without `KnownFields(true)` handles unknown-field rejections, not structural YAML errors. Testdata must reflect this — an actual syntax error would fail even the lenient parse.
+
+### Cost Observations
+
+- Model mix: ~80% opus (executor), ~20% sonnet (verifier)
+- Sessions: 1 session
+- Notable: Smallest milestone yet — 1 phase, 1 plan, 3 minutes execution time.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -161,6 +200,7 @@
 | v1.0 | ~3 | 10 | Initial project — full greenfield build |
 | v1.1 | 1 | 1 | Additive feature milestone — quick cycle, 2 post-ship quick fixes |
 | v1.2 | 1 | 1 | List-based exclusion — parallel Wave 2, clean single-session cycle |
+| v1.3 | 1 | 1 | Error notification on invalid config — smallest milestone, 3min execution |
 
 ### Cumulative Quality
 
@@ -169,6 +209,7 @@
 | v1.0 | All pass (race-clean) | 99/100 must-haves | ~11,168 |
 | v1.1 | All pass (race-clean) | 16/16 must-haves (1 human item) | ~12,372 |
 | v1.2 | All pass (race-clean) | 14/14 must-haves | ~13,365 |
+| v1.3 | All pass (race-clean) | 4/4 must-haves | ~13,663 |
 
 ### Top Lessons (Verified Across Milestones)
 

@@ -7,6 +7,7 @@ Karaclean is a Docker sidecar for the Karakeep bookmark manager that automatical
 **v1.0 shipped 2026-03-19.** 11,168 lines of Go, 10 phases, 20 plans. All 20 v1 requirements satisfied.
 **v1.1 shipped 2026-03-20.** Added notification system via Shoutrrr. 12,372 lines of Go.
 **v1.2 shipped 2026-03-22.** Added list-based bookmark exclusion (`inList`). 13,365 lines of Go.
+**v1.3 shipped 2026-03-22.** Added error notification on invalid config (`notifyOnError`). 13,663 lines of Go.
 
 ## Core Value
 
@@ -38,6 +39,10 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 
 - ✓ List-based bookmark exclusion — `inList` condition/exception excludes bookmarks by list membership — v1.2 Phase 01
 
+### Validated
+
+- ✓ Error notification on invalid config — `notifyOnError` sends to default channel on config validation failure with lenient fallback — v1.3
+
 ### Active
 
 - [ ] Per-run deletion cap — halt if a single run would delete more than N bookmarks (SAFE-01)
@@ -57,9 +62,9 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 
 ## Context
 
-- **Status:** Current milestone in progress. Phase 01 (error notification on invalid config) complete — `notifyOnError` config toggle, two-pass Load with lenient fallback.
+- **Status:** v1.3 shipped. `notifyOnError` config toggle sends error notification on invalid config at startup with lenient YAML fallback.
 - **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config, github.com/nicholas-fedor/shoutrrr for multi-channel notifications
-- **LOC:** ~13,365 Go in v1.2
+- **LOC:** ~13,663 Go in v1.3
 - **Submodule:** `karakeep-upstream/` contains Karakeep's source for API reference; do not modify it
 - **Karakeep API:** REST at `/api/v1`, Bearer token auth, cursor-based pagination
 - **Archive action:** `PATCH /v1/bookmarks/{id}` with `{ "archived": true }`
@@ -102,6 +107,9 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 | `StringOrSlice` custom YAML type | `inList` accepts both `"name"` and `["name1", "name2"]` syntax | ✓ Good — flexible config |
 | `listSets` passed as parameter | Thread-safe preloaded list membership; zero overhead when unused | ✓ Good |
 | `validateListNames` at startup | Fail-fast if configured list names don't exist in Karakeep | ✓ Good — prevents silent misconfiguration |
+| `ConfigErrorNotifier` interface in config package | Mirrors `engine.Notifier` to avoid import cycle (`config -> engine -> config`) | ✓ Good |
+| Variadic notifier on `Load()` | Backward-compatible signature extension — existing callers unaffected | ✓ Good |
+| Lenient fallback with `notificationsOnly` struct | Re-parses without `KnownFields(true)` to extract notifications from files with unknown fields | ✓ Good |
 
 ---
-*Last updated: 2026-03-22 after v1.2 milestone*
+*Last updated: 2026-03-22 after v1.3 milestone*

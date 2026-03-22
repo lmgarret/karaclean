@@ -1,5 +1,15 @@
 # Milestones
 
+## v1.3 Error Notification on Invalid Config (Shipped: 2026-03-22)
+
+**Phases completed:** 1 phases, 1 plans, 2 tasks
+
+**Key accomplishments:**
+
+- NotifyOnError opt-in field with two-pass Load, lenient fallback parse, and SendConfigError dispatch to default channel via ConfigErrorNotifier interface
+
+---
+
 ## v1.2 List-Based Exclusion (Shipped: 2026-03-22)
 
 **Phases completed:** 2 phases, 6 plans, 11 tasks
