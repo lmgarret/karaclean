@@ -60,3 +60,13 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 10. CI: Tests, Lint, Docker | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 01. Notification System | v1.1 | 3/3 | Complete | 2026-03-20 |
 | 01. List-based bookmark exclusion | v1.2 | 3/3 | Complete | 2026-03-22 |
+
+### Phase 1: Error notification on invalid config
+
+**Goal:** Send error notification to default channel when config validation fails at startup, toggleable via notifyOnError field, with lenient fallback for YAML syntax errors
+**Requirements**: [ERRNOTIF-01, ERRNOTIF-02, ERRNOTIF-03, ERRNOTIF-04]
+**Depends on:** Phase 0
+**Plans:** 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — NotifyOnError field, two-pass Load, lenient fallback, SendConfigError, tests, and docs
