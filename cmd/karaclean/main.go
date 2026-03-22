@@ -70,6 +70,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Step 4.25: Validate list names if any rule uses inList (D-03, D-12)
+	if listNames := cfg.CollectListNames(); len(listNames) > 0 {
+		if err := validateListNames(context.Background(), client, listNames); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	// Step 4.5: Create notifier for notification dispatch
 	var notifier engine.Notifier
 	if cfg.Notifications != nil {
@@ -137,6 +145,29 @@ func requireEnv(key string) (string, error) {
 		return "", fmt.Errorf("required environment variable %s is not set", key)
 	}
 	return val, nil
+}
+
+// validateListNames checks that all configured list names exist in Karakeep.
+// Returns an error listing all missing names (D-13).
+func validateListNames(ctx context.Context, client engine.KarakeepAPI, listNames []string) error {
+	lists, err := client.ListLists(ctx)
+	if err != nil {
+		return fmt.Errorf("validating list names: %w", err)
+	}
+	existing := make(map[string]bool, len(lists))
+	for _, l := range lists {
+		existing[l.Name] = true
+	}
+	var missing []string
+	for _, name := range listNames {
+		if !existing[name] {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("list names not found in Karakeep: %v", missing)
+	}
+	return nil
 }
 
 // resolveDryRun determines dry-run mode using precedence: flag > env var > config field.
