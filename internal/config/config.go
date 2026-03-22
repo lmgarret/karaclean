@@ -18,6 +18,28 @@ type NotificationChannel struct {
 	URL string `yaml:"url"`
 }
 
+// StringOrSlice is a custom type that accepts either a single string or a list
+// of strings in YAML. A scalar "value" unmarshals to []string{"value"}, while
+// a sequence ["a", "b"] unmarshals to []string{"a", "b"}.
+type StringOrSlice []string
+
+func (s *StringOrSlice) UnmarshalYAML(value *yaml.Node) error {
+	switch value.Kind {
+	case yaml.ScalarNode:
+		*s = []string{value.Value}
+		return nil
+	case yaml.SequenceNode:
+		var items []string
+		if err := value.Decode(&items); err != nil {
+			return err
+		}
+		*s = items
+		return nil
+	default:
+		return fmt.Errorf("expected string or list of strings")
+	}
+}
+
 // Config represents the top-level karaclean configuration.
 type Config struct {
 	Timezone      string         `yaml:"timezone"`
@@ -45,8 +67,9 @@ type Conditions struct {
 	Source     *string `yaml:"source"`
 	Archived   *bool   `yaml:"archived"`
 	Favourited *bool   `yaml:"favourited"`
-	HasTag     *string `yaml:"hasTag"`
-	LacksTag   *string `yaml:"lacksTag"`
+	HasTag     *string      `yaml:"hasTag"`
+	LacksTag   *string      `yaml:"lacksTag"`
+	InList     StringOrSlice `yaml:"inList"`
 }
 
 // Exceptions specifies criteria that protect bookmarks from a rule's action.
@@ -54,8 +77,9 @@ type Conditions struct {
 type Exceptions struct {
 	Favourited *bool   `yaml:"favourited"`
 	HasTag     *string `yaml:"hasTag"`
-	HasNote    *bool   `yaml:"hasNote"`
-	Archived   *bool   `yaml:"archived"`
+	HasNote    *bool         `yaml:"hasNote"`
+	Archived   *bool         `yaml:"archived"`
+	InList     StringOrSlice `yaml:"inList"`
 }
 
 // Load reads and parses a YAML config file from the given path.

@@ -120,6 +120,14 @@ func validateRule(rule Rule, prefix string) []ValidationError {
 				Message: "must not be empty",
 			})
 		}
+		for i, name := range rule.Unless.InList {
+			if name == "" {
+				errs = append(errs, ValidationError{
+					Field:   fmt.Sprintf("%s.unless.inList[%d]", prefix, i),
+					Message: "list name must not be empty",
+				})
+			}
+		}
 	}
 
 	return errs
@@ -135,7 +143,8 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 		cond.Archived == nil &&
 		cond.Favourited == nil &&
 		cond.HasTag == nil &&
-		cond.LacksTag == nil {
+		cond.LacksTag == nil &&
+		cond.InList == nil {
 		return []ValidationError{{Field: prefix, Message: "at least one condition required"}}
 	}
 
@@ -171,6 +180,16 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 			Field:   prefix + ".lacksTag",
 			Message: "must not be empty",
 		})
+	}
+
+	// Validate inList entries are non-empty.
+	for i, name := range cond.InList {
+		if name == "" {
+			errs = append(errs, ValidationError{
+				Field:   fmt.Sprintf("%s.inList[%d]", prefix, i),
+				Message: "list name must not be empty",
+			})
+		}
 	}
 
 	return errs
@@ -233,6 +252,29 @@ func validateNotifications(n *Notifications, rules []Rule) []ValidationError {
 	}
 
 	return errs
+}
+
+// CollectListNames returns a deduplicated slice of all list names referenced
+// in conditions.inList and unless.inList across all rules.
+func (c *Config) CollectListNames() []string {
+	seen := make(map[string]bool)
+	for _, r := range c.Rules {
+		if r.Conditions != nil {
+			for _, name := range r.Conditions.InList {
+				seen[name] = true
+			}
+		}
+		if r.Unless != nil {
+			for _, name := range r.Unless.InList {
+				seen[name] = true
+			}
+		}
+	}
+	names := make([]string, 0, len(seen))
+	for name := range seen {
+		names = append(names, name)
+	}
+	return names
 }
 
 func contains(slice []string, val string) bool {
