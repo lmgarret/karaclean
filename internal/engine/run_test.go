@@ -524,3 +524,160 @@ func TestRun_ListBookmarksError(t *testing.T) {
 		t.Errorf("expected zero RunSummary on error, got %+v", got)
 	}
 }
+
+func TestPreloadListSets_NoInList(t *testing.T) {
+	api := &mockAPI{}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{OlderThan: ptrStr("30d")}, Action: "archive"},
+	}
+	got, err := engine.PreloadListSets(context.Background(), api, rules)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Errorf("expected nil map for no inList rules, got %v", got)
+	}
+}
+
+func TestPreloadListSets_ResolvesAndFetches(t *testing.T) {
+	api := &mockAPI{
+		listListsRet: []engine.ListInfo{
+			{ID: "list-1", Name: "Read Later"},
+			{ID: "list-2", Name: "RSS Feeds"},
+		},
+		getListBookmarksRet: map[string][]string{
+			"list-1": {"bk-1", "bk-3"},
+			"list-2": {"bk-2"},
+		},
+	}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{InList: config.StringOrSlice{"Read Later"}}, Action: "archive"},
+		{Name: "r2", Unless: &config.Exceptions{InList: config.StringOrSlice{"RSS Feeds"}}, Action: "delete"},
+	}
+	got, err := engine.PreloadListSets(context.Background(), api, rules)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected non-nil map")
+	}
+	// Check Read Later
+	if !got["Read Later"]["bk-1"] || !got["Read Later"]["bk-3"] {
+		t.Errorf("Read Later set = %v, want bk-1 and bk-3", got["Read Later"])
+	}
+	// Check RSS Feeds
+	if !got["RSS Feeds"]["bk-2"] {
+		t.Errorf("RSS Feeds set = %v, want bk-2", got["RSS Feeds"])
+	}
+}
+
+func TestPreloadListSets_ListListsError(t *testing.T) {
+	api := &mockAPI{listListsErr: errors.New("api down")}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{InList: config.StringOrSlice{"Read Later"}}, Action: "archive"},
+	}
+	_, err := engine.PreloadListSets(context.Background(), api, rules)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "preloading lists") {
+		t.Errorf("error %q does not contain 'preloading lists'", err.Error())
+	}
+}
+
+func TestPreloadListSets_GetListBookmarksError(t *testing.T) {
+	api := &mockAPI{
+		listListsRet:       []engine.ListInfo{{ID: "list-1", Name: "Read Later"}},
+		getListBookmarksErr: errors.New("fetch failed"),
+	}
+	rules := []config.Rule{
+		{Name: "r1", Conditions: &config.Conditions{InList: config.StringOrSlice{"Read Later"}}, Action: "archive"},
+	}
+	_, err := engine.PreloadListSets(context.Background(), api, rules)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "preloading list") {
+		t.Errorf("error %q does not contain 'preloading list'", err.Error())
+	}
+}
+
+func TestRun_InListCondition(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+
+	api := &mockAPI{
+		listBookmarksRet: []engine.Bookmark{
+			{ID: "bk-1", CreatedAt: old},
+			{ID: "bk-2", CreatedAt: old},
+		},
+		listListsRet: []engine.ListInfo{
+			{ID: "list-2", Name: "RSS Feeds"},
+		},
+		getListBookmarksRet: map[string][]string{
+			"list-2": {"bk-2"},
+		},
+	}
+
+	rules := []config.Rule{
+		{
+			Name:       "rss-cleanup",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d"), InList: config.StringOrSlice{"RSS Feeds"}},
+			Action:     "delete",
+		},
+	}
+
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	// bk-2 is in RSS Feeds -> deleted; bk-1 is not in RSS Feeds -> no match
+	if got.Deleted != 1 {
+		t.Errorf("Deleted = %d, want 1", got.Deleted)
+	}
+	if got.NoMatch != 1 {
+		t.Errorf("NoMatch = %d, want 1", got.NoMatch)
+	}
+	if len(api.deleteBookmarkCalls) != 1 || api.deleteBookmarkCalls[0] != "bk-2" {
+		t.Errorf("deleteBookmarkCalls = %v, want [bk-2]", api.deleteBookmarkCalls)
+	}
+}
+
+func TestRun_InListException(t *testing.T) {
+	now := time.Now()
+	old := now.Add(-100 * 24 * time.Hour)
+
+	api := &mockAPI{
+		listBookmarksRet: []engine.Bookmark{
+			{ID: "bk-1", CreatedAt: old},
+			{ID: "bk-3", CreatedAt: old},
+		},
+		listListsRet: []engine.ListInfo{
+			{ID: "list-1", Name: "Read Later"},
+		},
+		getListBookmarksRet: map[string][]string{
+			"list-1": {"bk-1", "bk-3"},
+		},
+	}
+
+	rules := []config.Rule{
+		{
+			Name:       "old-cleanup",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d")},
+			Unless:     &config.Exceptions{InList: config.StringOrSlice{"Read Later"}},
+			Action:     "delete",
+		},
+	}
+
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	// Both bk-1 and bk-3 are in Read Later -> both excepted
+	if got.Excepted != 2 {
+		t.Errorf("Excepted = %d, want 2", got.Excepted)
+	}
+	if got.Deleted != 0 {
+		t.Errorf("Deleted = %d, want 0", got.Deleted)
+	}
+}

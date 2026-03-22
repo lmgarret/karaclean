@@ -30,6 +30,52 @@ func (s RunSummary) String() string {
 	return base
 }
 
+// PreloadListSets fetches list membership data from the API for all lists
+// referenced in rule conditions or exceptions. Returns nil if no rules use inList (D-05).
+func PreloadListSets(ctx context.Context, api KarakeepAPI, rules []config.Rule) (map[string]map[string]bool, error) {
+	nameSet := make(map[string]bool)
+	for _, r := range rules {
+		if r.Conditions != nil {
+			for _, name := range r.Conditions.InList {
+				nameSet[name] = true
+			}
+		}
+		if r.Unless != nil {
+			for _, name := range r.Unless.InList {
+				nameSet[name] = true
+			}
+		}
+	}
+	if len(nameSet) == 0 {
+		return nil, nil
+	}
+
+	lists, err := api.ListLists(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("preloading lists: %w", err)
+	}
+	nameToID := make(map[string]string)
+	for _, l := range lists {
+		if nameSet[l.Name] {
+			nameToID[l.Name] = l.ID
+		}
+	}
+
+	result := make(map[string]map[string]bool)
+	for name, id := range nameToID {
+		ids, err := api.GetListBookmarks(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("preloading list %q: %w", name, err)
+		}
+		set := make(map[string]bool, len(ids))
+		for _, bid := range ids {
+			set[bid] = true
+		}
+		result[name] = set
+	}
+	return result, nil
+}
+
 // Run is the core orchestrator. It implements a collect-then-act pattern:
 // 1. Paginate all bookmarks via api.ListBookmarks (fail-fast on error).
 // 2. For each bookmark, evaluate rules with first-match-wins semantics.
@@ -48,6 +94,15 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 	}
 	log.Printf("collected %d bookmarks", len(bookmarks))
 
+	// Phase 1.5: Preload list membership data (D-06: after ListBookmarks, before evaluation)
+	listSets, err := PreloadListSets(ctx, api, rules)
+	if err != nil {
+		return RunSummary{}, err
+	}
+	if listSets != nil {
+		log.Printf("preloaded %d list(s) for inList filtering", len(listSets))
+	}
+
 	// Initialize per-rule summaries for notification dispatch
 	ruleSummaries := make([]*RuleSummary, len(rules))
 	for i, rule := range rules {
@@ -59,10 +114,10 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 	for _, b := range bookmarks {
 		matched := false
 		for ruleIdx, rule := range rules {
-			if !MatchesConditions(b, rule.Conditions, runTime, nil) {
+			if !MatchesConditions(b, rule.Conditions, runTime, listSets) {
 				continue
 			}
-			if MatchesExceptions(b, rule.Unless, nil) {
+			if MatchesExceptions(b, rule.Unless, listSets) {
 				summary.Excepted++
 				ruleSummaries[ruleIdx].Excepted++
 				matched = true
