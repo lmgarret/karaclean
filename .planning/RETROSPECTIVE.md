@@ -107,6 +107,51 @@
 
 ---
 
+## Milestone: v1.2 — List-Based Exclusion
+
+**Shipped:** 2026-03-22
+**Phases:** 1 | **Plans:** 3
+
+### What Was Built
+
+- `StringOrSlice` custom YAML type for flexible `inList` config syntax (single string or list)
+- `InList` fields on both `Conditions` and `Exceptions` with structural validation
+- `CollectListNames` helper for gathering all referenced list names across rules
+- `KarakeepAPI` interface extended with `ListLists` and `GetListBookmarks` methods
+- API client wrappers with cursor pagination for list bookmark fetching
+- `validateListNames` startup check — fails fast if configured lists don't exist in Karakeep
+- `PreloadListSets` in `Run()` — preloads list membership data, zero overhead when no rules use `inList`
+- Matcher integration with OR-semantics inList checks for both conditions and exceptions
+
+### What Worked
+
+- **Wave-based parallel execution** — plans 01-02 and 01-03 ran in parallel (Wave 2) since they depended only on 01-01's contracts. Both completed cleanly with no merge conflicts.
+- **Interface-first design (plan 01-01)** — establishing `KarakeepAPI` interface extensions and config types first meant Wave 2 plans had stable contracts to implement against. Zero cross-plan wiring issues.
+- **Stub-then-implement pattern** — 01-01 added stub methods on `KarakeepClient` for interface compliance, 01-02 replaced them with real implementations. Clean handoff.
+- **TDD cycle** — each task committed failing tests first, then implementation. All 6 tasks followed the pattern consistently.
+
+### What Was Inefficient
+
+- Nothing notable — single-phase milestone with clean parallel execution. The only minor overhead was stub methods in 01-01 that existed solely to satisfy the compiler until 01-02 implemented the real methods.
+
+### Patterns Established
+
+- **`listSets map[string]map[string]bool` as function parameter** — thread-safe preloaded list membership passed through the call chain rather than stored as state. Matches the existing immutable-data-through-functions pattern.
+- **`validateListNames` at startup** — new startup validation step (after auth check, before engine run). Follows the existing fail-fast pattern from Shoutrrr URL validation.
+
+### Key Lessons
+
+1. **Parallel execution works cleanly when Wave 1 establishes all contracts.** The interface-first plan structure made Wave 2 parallelism safe by construction.
+2. **Small milestones (1 phase, 3 plans) complete in a single session with minimal overhead.** The full plan→execute→verify→archive cycle took one session.
+
+### Cost Observations
+
+- Model mix: ~80% opus (executor), ~20% sonnet (verifier)
+- Sessions: 1 session
+- Notable: Parallel Wave 2 saved ~50% wall-clock time vs sequential execution.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -115,6 +160,7 @@
 |-----------|----------|--------|------------|
 | v1.0 | ~3 | 10 | Initial project — full greenfield build |
 | v1.1 | 1 | 1 | Additive feature milestone — quick cycle, 2 post-ship quick fixes |
+| v1.2 | 1 | 1 | List-based exclusion — parallel Wave 2, clean single-session cycle |
 
 ### Cumulative Quality
 
@@ -122,6 +168,7 @@
 |-----------|----------|--------------------|-----|
 | v1.0 | All pass (race-clean) | 99/100 must-haves | ~11,168 |
 | v1.1 | All pass (race-clean) | 16/16 must-haves (1 human item) | ~12,372 |
+| v1.2 | All pass (race-clean) | 14/14 must-haves | ~13,365 |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -129,3 +176,4 @@
 2. Research-first pays back on phases involving external tooling with breaking changes.
 3. HTTP response code coverage (204 for DELETE, 201 for POST) should be in plan verify criteria by default.
 4. Quick tasks are the right tool for post-ship format/polish fixes — fast cycle, no overhead.
+5. Interface-first plan structure (Wave 1 = contracts) enables safe parallel execution in Wave 2.
