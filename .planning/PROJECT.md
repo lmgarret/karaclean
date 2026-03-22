@@ -57,7 +57,7 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 
 ## Context
 
-- **Status:** v1.2 shipped. List-based bookmark exclusion (`inList` conditions/exceptions).
+- **Status:** Current milestone in progress. Phase 01 (error notification on invalid config) complete — `notifyOnError` config toggle, two-pass Load with lenient fallback.
 - **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config, github.com/nicholas-fedor/shoutrrr for multi-channel notifications
 - **LOC:** ~13,365 Go in v1.2
 - **Submodule:** `karakeep-upstream/` contains Karakeep's source for API reference; do not modify it
