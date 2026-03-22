@@ -58,7 +58,7 @@ func (m *mockAPI) GetListBookmarks(ctx context.Context, listID string) ([]string
 // Compile-time proof that mockAPI satisfies the interface.
 var _ engine.KarakeepAPI = (*mockAPI)(nil)
 
-func TestMockAPI(t *testing.T) {
+func TestMockAPI(t *testing.T) { //nolint:gocyclo // subtest fan-out, each case is trivial
 	t.Run("CheckAuth returns configured error", func(t *testing.T) {
 		want := errors.New("auth failed")
 		api := &mockAPI{checkAuthErr: want}

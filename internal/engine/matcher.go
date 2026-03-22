@@ -32,28 +32,36 @@ func MatchesConditions(b Bookmark, c *config.Conditions, runTime time.Time, list
 		return false
 	}
 
-	if c.HasTag != nil && !hasTag(b.Tags, *c.HasTag) {
+	if !matchesTags(b.Tags, c.HasTag, c.LacksTag) {
 		return false
 	}
 
-	if c.LacksTag != nil && hasTag(b.Tags, *c.LacksTag) {
+	if c.InList != nil && !inAnyList(b.ID, c.InList, listSets) {
 		return false
-	}
-
-	if c.InList != nil {
-		found := false
-		for _, listName := range c.InList {
-			if set, ok := listSets[listName]; ok && set[b.ID] {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	return true
+}
+
+// matchesTags returns true if tag conditions are satisfied.
+func matchesTags(tags []string, mustHave, mustLack *string) bool {
+	if mustHave != nil && !hasTag(tags, *mustHave) {
+		return false
+	}
+	if mustLack != nil && hasTag(tags, *mustLack) {
+		return false
+	}
+	return true
+}
+
+// inAnyList returns true if the bookmark ID belongs to any of the named lists.
+func inAnyList(bookmarkID string, listNames []string, listSets map[string]map[string]bool) bool {
+	for _, listName := range listNames {
+		if set, ok := listSets[listName]; ok && set[bookmarkID] {
+			return true
+		}
+	}
+	return false
 }
 
 // matchesOlderThan returns true if the bookmark is strictly older than the given duration.

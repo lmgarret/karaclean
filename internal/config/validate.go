@@ -133,22 +133,21 @@ func validateRule(rule Rule, prefix string) []ValidationError {
 	return errs
 }
 
-// validateConditions checks a conditions block for semantic correctness.
-func validateConditions(cond *Conditions, prefix string) []ValidationError {
-	var errs []ValidationError
-
-	// Check all condition fields are nil (empty conditions).
-	if cond.OlderThan == nil &&
+// conditionsEmpty returns true if all condition fields are nil.
+func conditionsEmpty(cond *Conditions) bool {
+	return cond.OlderThan == nil &&
 		cond.Source == nil &&
 		cond.Archived == nil &&
 		cond.Favourited == nil &&
 		cond.HasTag == nil &&
 		cond.LacksTag == nil &&
-		cond.InList == nil {
-		return []ValidationError{{Field: prefix, Message: "at least one condition required"}}
-	}
+		cond.InList == nil
+}
 
-	// Validate source enum.
+// validateConditionFields checks individual condition field values for semantic correctness.
+func validateConditionFields(cond *Conditions, prefix string) []ValidationError {
+	var errs []ValidationError
+
 	if cond.Source != nil && !contains(validSources, *cond.Source) {
 		errs = append(errs, ValidationError{
 			Field:   prefix + ".source",
@@ -156,7 +155,6 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 		})
 	}
 
-	// Validate olderThan is a valid duration string.
 	if cond.OlderThan != nil {
 		if _, err := duration.Parse(*cond.OlderThan); err != nil {
 			errs = append(errs, ValidationError{
@@ -166,7 +164,6 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 		}
 	}
 
-	// Validate hasTag is non-empty.
 	if cond.HasTag != nil && *cond.HasTag == "" {
 		errs = append(errs, ValidationError{
 			Field:   prefix + ".hasTag",
@@ -174,7 +171,6 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 		})
 	}
 
-	// Validate lacksTag is non-empty.
 	if cond.LacksTag != nil && *cond.LacksTag == "" {
 		errs = append(errs, ValidationError{
 			Field:   prefix + ".lacksTag",
@@ -182,7 +178,6 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 		})
 	}
 
-	// Validate inList entries are non-empty.
 	for i, name := range cond.InList {
 		if name == "" {
 			errs = append(errs, ValidationError{
@@ -193,6 +188,14 @@ func validateConditions(cond *Conditions, prefix string) []ValidationError {
 	}
 
 	return errs
+}
+
+// validateConditions checks a conditions block for semantic correctness.
+func validateConditions(cond *Conditions, prefix string) []ValidationError {
+	if conditionsEmpty(cond) {
+		return []ValidationError{{Field: prefix, Message: "at least one condition required"}}
+	}
+	return validateConditionFields(cond, prefix)
 }
 
 // validateNotifications checks notification channel definitions and references.

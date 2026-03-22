@@ -26,57 +26,16 @@ func main() {
 	flag.Parse()
 
 	// Step 1: Load config
-	path := config.ResolvePath(configPath)
-	cfg, err := config.Load(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
+	cfg := loadConfig(configPath)
 
 	// Step 1.5: Resolve dry-run mode (flag > env > config)
-	dryRunFlagSet := false
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == "dry-run" {
-			dryRunFlagSet = true
-		}
-	})
-	dryRun := resolveDryRun(dryRunFlagSet, dryRunFlag, os.Getenv("KARACLEAN_DRY_RUN"), cfg.DryRun)
+	dryRun := resolveDryRunFromFlags(dryRunFlag, cfg.DryRun)
 	if dryRun {
 		log.Println("dry-run mode enabled -- no mutations will be executed")
 	}
 
-	// Step 2: Read required env vars
-	karakeepURL, err := requireEnv("KARAKEEP_URL")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-	apiKey, err := requireEnv("KARAKEEP_API_KEY")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Step 3: Construct API client
-	client, err := karakeep.NewKarakeepClient(karakeepURL, apiKey)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Step 4: Validate auth token on startup (CONF-03)
-	if err := client.CheckAuth(context.Background()); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Step 4.25: Validate list names if any rule uses inList (D-03, D-12)
-	if listNames := cfg.CollectListNames(); len(listNames) > 0 {
-		if err := validateListNames(context.Background(), client, listNames); err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-	}
+	// Steps 2-4.25: Construct and validate API client
+	client := initClient(cfg)
 
 	// Step 4.5: Create notifier for notification dispatch
 	var notifier engine.Notifier
@@ -85,12 +44,7 @@ func main() {
 	}
 
 	// Step 5: Resolve timezone
-	loc := time.UTC
-	if cfg.Timezone != "" {
-		loc, _ = time.LoadLocation(cfg.Timezone) // already validated by config.Validate()
-	} else {
-		log.Println("WARNING: timezone not set, defaulting to UTC")
-	}
+	loc := resolveTimezone(cfg.Timezone)
 
 	// Step 6: Create signal-aware context
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
@@ -99,12 +53,76 @@ func main() {
 	// Step 7: Run immediately at startup (synchronous, before cron starts)
 	summary, err := engine.Run(ctx, client, cfg.Rules, dryRun, cfg.Notifications, notifier)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		exitf("error: %v", err)
 	}
 	log.Printf("run complete: %s", summary)
 
-	// Step 8: Set up cron scheduler
+	// Step 8: Set up cron scheduler and block until signal
+	runScheduler(ctx, cfg, client, dryRun, notifier, loc)
+}
+
+// loadConfig loads and validates the configuration file.
+func loadConfig(configPath string) *config.Config {
+	path := config.ResolvePath(configPath)
+	cfg, err := config.Load(path)
+	if err != nil {
+		exitf("error: %v", err)
+	}
+	return cfg
+}
+
+// resolveDryRunFromFlags determines dry-run mode from CLI flags, env, and config.
+func resolveDryRunFromFlags(dryRunFlag bool, configVal bool) bool {
+	dryRunFlagSet := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "dry-run" {
+			dryRunFlagSet = true
+		}
+	})
+	return resolveDryRun(dryRunFlagSet, dryRunFlag, os.Getenv("KARACLEAN_DRY_RUN"), configVal)
+}
+
+// initClient creates, authenticates, and validates the Karakeep API client.
+func initClient(cfg *config.Config) engine.KarakeepAPI {
+	karakeepURL, err := requireEnv("KARAKEEP_URL")
+	if err != nil {
+		exitf("error: %v", err)
+	}
+	apiKey, err := requireEnv("KARAKEEP_API_KEY")
+	if err != nil {
+		exitf("error: %v", err)
+	}
+
+	client, err := karakeep.NewKarakeepClient(karakeepURL, apiKey)
+	if err != nil {
+		exitf("error: %v", err)
+	}
+
+	if err := client.CheckAuth(context.Background()); err != nil {
+		exitf("error: %v", err)
+	}
+
+	if listNames := cfg.CollectListNames(); len(listNames) > 0 {
+		if err := validateListNames(context.Background(), client, listNames); err != nil {
+			exitf("error: %v", err)
+		}
+	}
+
+	return client
+}
+
+// resolveTimezone returns the timezone location from config, defaulting to UTC.
+func resolveTimezone(tz string) *time.Location {
+	if tz != "" {
+		loc, _ := time.LoadLocation(tz) // already validated by config.Validate()
+		return loc
+	}
+	log.Println("WARNING: timezone not set, defaulting to UTC")
+	return time.UTC
+}
+
+// runScheduler sets up the cron scheduler and blocks until context cancellation.
+func runScheduler(ctx context.Context, cfg *config.Config, client engine.KarakeepAPI, dryRun bool, notifier engine.Notifier, loc *time.Location) {
 	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	c := cron.New(
 		cron.WithParser(parser),
@@ -128,13 +146,17 @@ func main() {
 		log.Printf("next run at %s", entries[0].Next.Format(time.RFC3339))
 	}
 
-	// Step 9: Block until signal
 	<-ctx.Done()
 	log.Println("received signal, shutting down")
 
-	// Step 10: Graceful stop -- wait for in-progress job to finish
 	stopCtx := c.Stop()
 	<-stopCtx.Done()
+}
+
+// exitf prints a formatted error message to stderr and exits with code 1.
+func exitf(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
+	os.Exit(1)
 }
 
 // requireEnv returns the value of the named environment variable,
