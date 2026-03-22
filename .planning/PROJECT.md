@@ -6,6 +6,7 @@ Karaclean is a Docker sidecar for the Karakeep bookmark manager that automatical
 
 **v1.0 shipped 2026-03-19.** 11,168 lines of Go, 10 phases, 20 plans. All 20 v1 requirements satisfied.
 **v1.1 shipped 2026-03-20.** Added notification system via Shoutrrr. 12,372 lines of Go.
+**v1.2 shipped 2026-03-22.** Added list-based bookmark exclusion (`inList`). 13,365 lines of Go.
 
 ## Core Value
 
@@ -56,14 +57,15 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 
 ## Context
 
-- **Status:** v1.2 in progress. Phase 01 complete — list-based bookmark exclusion (`inList` conditions/exceptions).
+- **Status:** v1.2 shipped. List-based bookmark exclusion (`inList` conditions/exceptions).
 - **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config, github.com/nicholas-fedor/shoutrrr for multi-channel notifications
-- **LOC:** ~12,372 Go | 123 files in v1.1
+- **LOC:** ~13,365 Go in v1.2
 - **Submodule:** `karakeep-upstream/` contains Karakeep's source for API reference; do not modify it
 - **Karakeep API:** REST at `/api/v1`, Bearer token auth, cursor-based pagination
 - **Archive action:** `PATCH /v1/bookmarks/{id}` with `{ "archived": true }`
 - **Delete action:** `DELETE /v1/bookmarks/{id}`
-- **List bookmarks:** `GET /v1/bookmarks` — cursor pagination; highlights/lists require separate calls
+- **List bookmarks:** `GET /v1/bookmarks` — cursor pagination
+- **List lists:** `GET /v1/lists` — returns all lists; `GET /v1/lists/{id}/bookmarks` — cursor pagination
 - **Known debt:** 4 direct deps annotated `// indirect` in go.mod (cosmetic, fix with `go mod tidy`)
 
 ## Constraints
@@ -97,6 +99,9 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 | `Run()` trailing params for notifier | Backward-compatible signature extension — callers without notifications pass nil | ✓ Good |
 | `Summary:` prefix in message body | Avoids title duplication; cleaner message format | ✓ Good — improved after initial shipping |
 | HTTP 204 accepted as DELETE success | Karakeep returns 204 No Content on delete; 200 was incorrect expectation | ✓ Fixed — regression in v1.0 |
+| `StringOrSlice` custom YAML type | `inList` accepts both `"name"` and `["name1", "name2"]` syntax | ✓ Good — flexible config |
+| `listSets` passed as parameter | Thread-safe preloaded list membership; zero overhead when unused | ✓ Good |
+| `validateListNames` at startup | Fail-fast if configured list names don't exist in Karakeep | ✓ Good — prevents silent misconfiguration |
 
 ---
-*Last updated: 2026-03-22 after v1.2 Phase 01*
+*Last updated: 2026-03-22 after v1.2 milestone*
