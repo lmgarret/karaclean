@@ -112,15 +112,49 @@ func (c *KarakeepClient) DeleteBookmark(ctx context.Context, id string) error {
 }
 
 // ListLists retrieves all lists from Karakeep.
-// TODO(01-02): implement with actual API calls and pagination.
 func (c *KarakeepClient) ListLists(ctx context.Context) ([]engine.ListInfo, error) {
-	return nil, fmt.Errorf("ListLists not yet implemented")
+	resp, err := c.inner.ListListsWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("listing lists: %w", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("listing lists: unexpected status %d", resp.StatusCode())
+	}
+	lists := make([]engine.ListInfo, 0, len(resp.JSON200.Lists))
+	for _, l := range resp.JSON200.Lists {
+		lists = append(lists, engine.ListInfo{ID: l.Id, Name: l.Name})
+	}
+	return lists, nil
 }
 
-// GetListBookmarks retrieves bookmark IDs belonging to a specific list.
-// TODO(01-02): implement with actual API calls and cursor-based pagination.
+// GetListBookmarks retrieves all bookmark IDs belonging to a specific list using cursor-based pagination.
 func (c *KarakeepClient) GetListBookmarks(ctx context.Context, listID string) ([]string, error) {
-	return nil, fmt.Errorf("GetListBookmarks not yet implemented")
+	var ids []string
+	var cursor *Cursor
+	for {
+		limit := float32(100)
+		resp, err := c.inner.GetListBookmarksWithResponse(ctx, listID, &GetListBookmarksParams{
+			Cursor: cursor,
+			Limit:  &limit,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("getting list bookmarks: %w", err)
+		}
+		if resp.StatusCode() != http.StatusOK {
+			return nil, fmt.Errorf("getting list bookmarks: unexpected status %d", resp.StatusCode())
+		}
+		for _, b := range resp.JSON200.Bookmarks {
+			ids = append(ids, b.Id)
+		}
+		if resp.JSON200.NextCursor == nil {
+			break
+		}
+		cursor = resp.JSON200.NextCursor
+	}
+	if ids == nil {
+		ids = []string{}
+	}
+	return ids, nil
 }
 
 // toEngineBookmark maps a generated Bookmark to the engine domain type.
