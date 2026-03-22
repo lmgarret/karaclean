@@ -368,6 +368,53 @@ func TestLoad_NoNotifications(t *testing.T) {
 	}
 }
 
+func TestLoad_InListString(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_inlist_string.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(cfg.Rules) != 1 {
+		t.Fatalf("len(rules) = %d, want 1", len(cfg.Rules))
+	}
+
+	r := cfg.Rules[0]
+	if r.Conditions == nil {
+		t.Fatal("rules[0].conditions is nil")
+	}
+	if r.Conditions.InList == nil {
+		t.Fatal("rules[0].conditions.inList is nil")
+	}
+	if len(r.Conditions.InList) != 1 || r.Conditions.InList[0] != "Read Later" {
+		t.Errorf("rules[0].conditions.inList = %v, want [Read Later]", r.Conditions.InList)
+	}
+}
+
+func TestLoad_InListList(t *testing.T) {
+	cfg, err := config.Load("testdata/valid_inlist_list.yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(cfg.Rules) != 1 {
+		t.Fatalf("len(rules) = %d, want 1", len(cfg.Rules))
+	}
+
+	r := cfg.Rules[0]
+	if r.Unless == nil {
+		t.Fatal("rules[0].unless is nil")
+	}
+	if r.Unless.InList == nil {
+		t.Fatal("rules[0].unless.inList is nil")
+	}
+	if len(r.Unless.InList) != 2 {
+		t.Fatalf("len(unless.inList) = %d, want 2", len(r.Unless.InList))
+	}
+	if r.Unless.InList[0] != "Read Later" || r.Unless.InList[1] != "Favorites" {
+		t.Errorf("rules[0].unless.inList = %v, want [Read Later, Favorites]", r.Unless.InList)
+	}
+}
+
 func TestResolvePath_Flag(t *testing.T) {
 	got := config.ResolvePath("explicit.yaml")
 	if got != "explicit.yaml" {

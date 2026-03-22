@@ -1,0 +1,7 @@
+schedule: "0 3 * * *"
+rules:
+  - name: exclude-read-later
+    conditions:
+      olderThan: "30d"
+      inList: "Read Later"
+    action: archive

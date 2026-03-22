@@ -1,0 +1,10 @@
+schedule: "0 3 * * *"
+rules:
+  - name: exclude-multiple-lists
+    conditions:
+      olderThan: "30d"
+    unless:
+      inList:
+        - "Read Later"
+        - "Favorites"
+    action: archive

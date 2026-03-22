@@ -549,6 +549,105 @@ func TestValidationErrors_Error(t *testing.T) {
 	}
 }
 
+func TestValidate_InList_EmptyName(t *testing.T) {
+	cfg := config.Config{
+		Schedule: "0 3 * * *",
+		Rules: []config.Rule{{
+			Action:     "archive",
+			Conditions: &config.Conditions{OlderThan: strPtr("30d"), InList: config.StringOrSlice{"valid", ""}},
+		}},
+	}
+	errs := cfg.Validate()
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e.Error(), "conditions.inList[1]") && strings.Contains(e.Error(), "list name must not be empty") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected validation error for empty inList entry, got: %v", errs)
+	}
+}
+
+func TestValidate_InList_UnlessEmptyName(t *testing.T) {
+	cfg := config.Config{
+		Schedule: "0 3 * * *",
+		Rules: []config.Rule{{
+			Action:     "archive",
+			Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+			Unless:     &config.Exceptions{InList: config.StringOrSlice{""}},
+		}},
+	}
+	errs := cfg.Validate()
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e.Error(), "unless.inList[0]") && strings.Contains(e.Error(), "list name must not be empty") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected validation error for empty unless.inList entry, got: %v", errs)
+	}
+}
+
+func TestValidate_InListOnly_PassesConditionCheck(t *testing.T) {
+	cfg := config.Config{
+		Schedule: "0 3 * * *",
+		Rules: []config.Rule{{
+			Action:     "archive",
+			Conditions: &config.Conditions{InList: config.StringOrSlice{"Read Later"}},
+		}},
+	}
+	errs := cfg.Validate()
+	for _, e := range errs {
+		if strings.Contains(e.Error(), "at least one condition required") {
+			t.Errorf("inList alone should satisfy condition requirement, got: %v", errs)
+		}
+	}
+	if len(errs) != 0 {
+		t.Errorf("expected 0 errors, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestCollectListNames(t *testing.T) {
+	cfg := config.Config{
+		Schedule: "0 3 * * *",
+		Rules: []config.Rule{
+			{
+				Action:     "archive",
+				Conditions: &config.Conditions{InList: config.StringOrSlice{"Read Later", "Favorites"}},
+			},
+			{
+				Action:     "delete",
+				Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+				Unless:     &config.Exceptions{InList: config.StringOrSlice{"Read Later", "Important"}},
+			},
+		},
+	}
+	names := cfg.CollectListNames()
+	// Should be deduplicated: Read Later, Favorites, Important
+	nameSet := make(map[string]bool)
+	for _, n := range names {
+		nameSet[n] = true
+	}
+	if len(nameSet) != 3 {
+		t.Errorf("expected 3 unique list names, got %d: %v", len(nameSet), names)
+	}
+	for _, want := range []string{"Read Later", "Favorites", "Important"} {
+		if !nameSet[want] {
+			t.Errorf("expected list name %q in result, got: %v", want, names)
+		}
+	}
+}
+
+func TestCollectListNames_Empty(t *testing.T) {
+	cfg := validConfig()
+	names := cfg.CollectListNames()
+	if len(names) != 0 {
+		t.Errorf("expected empty slice, got %v", names)
+	}
+}
+
 func TestLoad_ValidationIntegration(t *testing.T) {
 	dir := t.TempDir()
 	yamlContent := `schedule: "0 3 * * *"
