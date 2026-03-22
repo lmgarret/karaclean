@@ -111,6 +111,18 @@ func (c *KarakeepClient) DeleteBookmark(ctx context.Context, id string) error {
 	return nil
 }
 
+// ListLists retrieves all lists from Karakeep.
+// TODO(01-02): implement with actual API calls and pagination.
+func (c *KarakeepClient) ListLists(ctx context.Context) ([]engine.ListInfo, error) {
+	return nil, fmt.Errorf("ListLists not yet implemented")
+}
+
+// GetListBookmarks retrieves bookmark IDs belonging to a specific list.
+// TODO(01-02): implement with actual API calls and cursor-based pagination.
+func (c *KarakeepClient) GetListBookmarks(ctx context.Context, listID string) ([]string, error) {
+	return nil, fmt.Errorf("GetListBookmarks not yet implemented")
+}
+
 // toEngineBookmark maps a generated Bookmark to the engine domain type.
 func toEngineBookmark(b Bookmark) engine.Bookmark {
 	createdAt, _ := time.Parse(time.RFC3339, b.CreatedAt)

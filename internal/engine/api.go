@@ -18,4 +18,11 @@ type KarakeepAPI interface {
 
 	// DeleteBookmark permanently removes the bookmark via DELETE /bookmarks/{id}.
 	DeleteBookmark(ctx context.Context, id string) error
+
+	// ListLists retrieves all lists from Karakeep.
+	ListLists(ctx context.Context) ([]ListInfo, error)
+
+	// GetListBookmarks retrieves bookmark IDs belonging to a specific list.
+	// Uses cursor-based pagination to fetch all pages.
+	GetListBookmarks(ctx context.Context, listID string) ([]string, error)
 }

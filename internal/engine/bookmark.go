@@ -14,3 +14,9 @@ type Bookmark struct {
 	Note       string   // user's personal note (empty string if none)
 	Size       int64    // content size in bytes (0 means unknown/not applicable)
 }
+
+// ListInfo represents a Karakeep list with its ID and display name.
+type ListInfo struct {
+	ID   string
+	Name string
+}
