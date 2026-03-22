@@ -1,0 +1,12 @@
+schedule: "0 3 * * *"
+notifications:
+  channels:
+    my-ntfy:
+      url: "ntfy://ntfy.sh/karaclean-alerts"
+  default: my-ntfy
+  notifyOnError: true
+rules:
+  - name: broken
+    conditions:
+    olderThan: "30d"
+  action: delete

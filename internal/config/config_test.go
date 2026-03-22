@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -413,6 +414,197 @@ func TestLoad_InListList(t *testing.T) {
 	if r.Unless.InList[0] != "Read Later" || r.Unless.InList[1] != "Favorites" {
 		t.Errorf("rules[0].unless.inList = %v, want [Read Later, Favorites]", r.Unless.InList)
 	}
+}
+
+// mockNotifier records Send calls for testing.
+type mockNotifier struct {
+	calls []sendCall
+	err   error // error to return from Send, if any
+}
+
+type sendCall struct {
+	url, message, title string
+}
+
+func (m *mockNotifier) Send(url, message, title string) error {
+	m.calls = append(m.calls, sendCall{url: url, message: message, title: title})
+	return m.err
+}
+
+func TestSendConfigError(t *testing.T) {
+	t.Run("nil notifications is no-op", func(t *testing.T) {
+		mock := &mockNotifier{}
+		config.SendConfigError(nil, mock, fmt.Errorf("some error"))
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no calls, got %d", len(mock.calls))
+		}
+	})
+
+	t.Run("notifyOnError false is no-op", func(t *testing.T) {
+		mock := &mockNotifier{}
+		n := &config.Notifications{
+			Channels:      map[string]config.NotificationChannel{"ch": {URL: "ntfy://ntfy.sh/test"}},
+			Default:       "ch",
+			NotifyOnError: boolPtr(false),
+		}
+		config.SendConfigError(n, mock, fmt.Errorf("some error"))
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no calls, got %d", len(mock.calls))
+		}
+	})
+
+	t.Run("notifyOnError nil is no-op", func(t *testing.T) {
+		mock := &mockNotifier{}
+		n := &config.Notifications{
+			Channels: map[string]config.NotificationChannel{"ch": {URL: "ntfy://ntfy.sh/test"}},
+			Default:  "ch",
+		}
+		config.SendConfigError(n, mock, fmt.Errorf("some error"))
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no calls, got %d", len(mock.calls))
+		}
+	})
+
+	t.Run("no default channel is no-op", func(t *testing.T) {
+		mock := &mockNotifier{}
+		n := &config.Notifications{
+			Channels:      map[string]config.NotificationChannel{"ch": {URL: "ntfy://ntfy.sh/test"}},
+			NotifyOnError: boolPtr(true),
+		}
+		config.SendConfigError(n, mock, fmt.Errorf("some error"))
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no calls, got %d", len(mock.calls))
+		}
+	})
+
+	t.Run("successful send", func(t *testing.T) {
+		mock := &mockNotifier{}
+		n := &config.Notifications{
+			Channels:      map[string]config.NotificationChannel{"my-ntfy": {URL: "ntfy://ntfy.sh/karaclean-alerts"}},
+			Default:       "my-ntfy",
+			NotifyOnError: boolPtr(true),
+		}
+		configErr := fmt.Errorf("config validation failed:\n  - rules[0]: missing required field \"action\"")
+		config.SendConfigError(n, mock, configErr)
+		if len(mock.calls) != 1 {
+			t.Fatalf("expected 1 call, got %d", len(mock.calls))
+		}
+		call := mock.calls[0]
+		if call.url != "ntfy://ntfy.sh/karaclean-alerts" {
+			t.Errorf("url = %q, want %q", call.url, "ntfy://ntfy.sh/karaclean-alerts")
+		}
+		if call.title != "[ERROR] [karaclean] config validation failed" {
+			t.Errorf("title = %q, want %q", call.title, "[ERROR] [karaclean] config validation failed")
+		}
+		if call.message != configErr.Error() {
+			t.Errorf("message = %q, want %q", call.message, configErr.Error())
+		}
+	})
+
+	t.Run("send failure is logged not propagated", func(t *testing.T) {
+		mock := &mockNotifier{err: fmt.Errorf("network error")}
+		n := &config.Notifications{
+			Channels:      map[string]config.NotificationChannel{"ch": {URL: "ntfy://ntfy.sh/test"}},
+			Default:       "ch",
+			NotifyOnError: boolPtr(true),
+		}
+		// Should not panic or return error — best effort.
+		config.SendConfigError(n, mock, fmt.Errorf("validation error"))
+		if len(mock.calls) != 1 {
+			t.Errorf("expected 1 call even on error, got %d", len(mock.calls))
+		}
+	})
+
+	t.Run("default channel not found is no-op", func(t *testing.T) {
+		mock := &mockNotifier{}
+		n := &config.Notifications{
+			Channels:      map[string]config.NotificationChannel{"other": {URL: "ntfy://ntfy.sh/test"}},
+			Default:       "nonexistent",
+			NotifyOnError: boolPtr(true),
+		}
+		config.SendConfigError(n, mock, fmt.Errorf("validation error"))
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no calls for missing channel, got %d", len(mock.calls))
+		}
+	})
+}
+
+func TestLoad_NotifyOnError(t *testing.T) {
+	t.Run("valid config with notifyOnError true", func(t *testing.T) {
+		cfg, err := config.Load("testdata/valid_notify_on_error.yaml")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.Notifications == nil {
+			t.Fatal("expected Notifications to be non-nil")
+		}
+		if cfg.Notifications.NotifyOnError == nil || !*cfg.Notifications.NotifyOnError {
+			t.Error("expected NotifyOnError to be true")
+		}
+	})
+
+	t.Run("invalid config with notifyOnError triggers notification", func(t *testing.T) {
+		mock := &mockNotifier{}
+		_, err := config.Load("testdata/invalid_with_notify_on_error.yaml", mock)
+		if err == nil {
+			t.Fatal("expected validation error, got nil")
+		}
+		if len(mock.calls) != 1 {
+			t.Fatalf("expected 1 notification call, got %d", len(mock.calls))
+		}
+		call := mock.calls[0]
+		if call.title != "[ERROR] [karaclean] config validation failed" {
+			t.Errorf("title = %q, want %q", call.title, "[ERROR] [karaclean] config validation failed")
+		}
+		if !strings.Contains(call.message, "action") {
+			t.Errorf("message should contain 'action', got %q", call.message)
+		}
+	})
+
+	t.Run("invalid config without notifyOnError does not notify", func(t *testing.T) {
+		mock := &mockNotifier{}
+		// Use a temp file with invalid config but no notifyOnError
+		dir := t.TempDir()
+		yamlContent := `schedule: "0 3 * * *"
+notifications:
+  channels:
+    my-ntfy:
+      url: "ntfy://ntfy.sh/karaclean-alerts"
+  default: my-ntfy
+rules:
+  - name: missing-action
+    conditions:
+      olderThan: "30d"
+`
+		path := filepath.Join(dir, "no_notify.yaml")
+		if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		_, err := config.Load(path, mock)
+		if err == nil {
+			t.Fatal("expected validation error")
+		}
+		if len(mock.calls) != 0 {
+			t.Errorf("expected no notification calls, got %d", len(mock.calls))
+		}
+	})
+}
+
+func TestLoad_LenientFallback(t *testing.T) {
+	t.Run("syntax error with notifications triggers lenient parse and notification", func(t *testing.T) {
+		mock := &mockNotifier{}
+		_, err := config.Load("testdata/syntax_error_with_notifications.yaml", mock)
+		if err == nil {
+			t.Fatal("expected parse error, got nil")
+		}
+		if len(mock.calls) != 1 {
+			t.Fatalf("expected 1 notification call from lenient fallback, got %d", len(mock.calls))
+		}
+		call := mock.calls[0]
+		if call.title != "[ERROR] [karaclean] config validation failed" {
+			t.Errorf("title = %q, want %q", call.title, "[ERROR] [karaclean] config validation failed")
+		}
+	})
 }
 
 func TestResolvePath_Flag(t *testing.T) {
