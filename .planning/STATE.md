@@ -1,16 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Notifications
-status: milestone_complete
-stopped_at: v1.1 milestone complete
-last_updated: "2026-03-20T15:00:00.000Z"
-last_activity: "2026-03-20 - Completed v1.1 Notifications milestone"
+milestone: v1.0
+milestone_name: milestone
+current_plan: 2 of 3
+status: unknown
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-03-22T15:31:24.966Z"
+last_activity: 2026-03-22
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State
@@ -20,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20 after v1.1 milestone)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** v1.1 shipped — planning next milestone
+**Current focus:** Phase 01 — list-based-bookmark-exclusion
 
 ## Current Position
 
-Phase: 01 (notification-system-send-per-rule-action-summaries-to-configurable-channels-slack-ntfy-telegram-etc-with-global-default-channel-and-per-rule-channel-override) — COMPLETE
-Plan: 3 of 3 (all complete)
+Phase: 01 (list-based-bookmark-exclusion) — EXECUTING
+Current Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -67,6 +68,7 @@ Plan: 3 of 3 (all complete)
 | Phase 01 P01 | 3min | 2 tasks | 6 files |
 | Phase 01 P02 | 2min | 1 tasks | 2 files |
 | Phase 01 P03 | 2min | 2 tasks | 3 files |
+| Phase 01 P01 | 4min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -116,12 +118,15 @@ Recent decisions affecting current work:
 - [Phase 01]: Notifier interface uses Send(url, message, title) for testable notification dispatch
 - [Phase 01]: main.go creates notifier only when cfg.Notifications is non-nil (nil = no Shoutrrr overhead)
 - [Phase 01]: Run() signature extended with trailing params (notifications, notifier) for backward compat
+- [Phase 01]: StringOrSlice uses custom UnmarshalYAML with yaml.Node for KnownFields(true) compatibility
+- [Phase 01]: KarakeepClient gets stub methods for interface compliance; plan 02 implements
 
 ### Roadmap Evolution
 
 - Phase 9 added: Documentation: extensive README, CLI and Docker image usage docs
 - Phase 10 added: CI: run tests, lint, and build docker image
 - Phase 1 (next milestone) added: Notification system with per-rule channel routing (Slack, ntfy, Telegram, global default + per-rule override)
+- Phase 1 added: List-based bookmark exclusion — exclude bookmarks from rule actions if they belong to specified lists
 
 ### Pending Todos
 
@@ -145,7 +150,7 @@ None.
 
 ## Session Continuity
 
-Last activity: 2026-03-20 - Completed quick task 260320-ls1: Improve notification message format
-Last session: 2026-03-20T14:42:00Z
-Stopped at: Completed quick task 260320-ls1
+Last activity: 2026-03-22
+Last session: 2026-03-22T15:31:24.962Z
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None
