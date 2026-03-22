@@ -19,6 +19,11 @@ type mockAPI struct {
 
 	archiveBookmarkCalls []string
 	deleteBookmarkCalls  []string
+
+	listListsRet         []engine.ListInfo
+	listListsErr         error
+	getListBookmarksRet  map[string][]string
+	getListBookmarksErr  error
 }
 
 func (m *mockAPI) CheckAuth(ctx context.Context) error {
@@ -37,6 +42,17 @@ func (m *mockAPI) ArchiveBookmark(ctx context.Context, id string) error {
 func (m *mockAPI) DeleteBookmark(ctx context.Context, id string) error {
 	m.deleteBookmarkCalls = append(m.deleteBookmarkCalls, id)
 	return m.deleteBookmarkErr
+}
+
+func (m *mockAPI) ListLists(ctx context.Context) ([]engine.ListInfo, error) {
+	return m.listListsRet, m.listListsErr
+}
+
+func (m *mockAPI) GetListBookmarks(ctx context.Context, listID string) ([]string, error) {
+	if m.getListBookmarksRet != nil {
+		return m.getListBookmarksRet[listID], m.getListBookmarksErr
+	}
+	return nil, m.getListBookmarksErr
 }
 
 // Compile-time proof that mockAPI satisfies the interface.
@@ -111,6 +127,68 @@ func TestMockAPI(t *testing.T) {
 		want := errors.New("delete failed")
 		api := &mockAPI{deleteBookmarkErr: want}
 		if err := api.DeleteBookmark(context.Background(), "bk-2"); err != want {
+			t.Errorf("got %v, want %v", err, want)
+		}
+	})
+
+	t.Run("ListLists returns configured lists", func(t *testing.T) {
+		want := []engine.ListInfo{
+			{ID: "list-1", Name: "Read Later"},
+			{ID: "list-2", Name: "Favorites"},
+		}
+		api := &mockAPI{listListsRet: want}
+		got, err := api.ListLists(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got) != len(want) {
+			t.Fatalf("got %d lists, want %d", len(got), len(want))
+		}
+		for i := range want {
+			if got[i].ID != want[i].ID || got[i].Name != want[i].Name {
+				t.Errorf("list[%d] = %+v, want %+v", i, got[i], want[i])
+			}
+		}
+	})
+
+	t.Run("ListLists returns configured error", func(t *testing.T) {
+		want := errors.New("list lists failed")
+		api := &mockAPI{listListsErr: want}
+		_, err := api.ListLists(context.Background())
+		if err != want {
+			t.Errorf("got %v, want %v", err, want)
+		}
+	})
+
+	t.Run("GetListBookmarks returns configured IDs", func(t *testing.T) {
+		api := &mockAPI{
+			getListBookmarksRet: map[string][]string{
+				"list-1": {"bk-1", "bk-2"},
+				"list-2": {"bk-3"},
+			},
+		}
+		got, err := api.GetListBookmarks(context.Background(), "list-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got) != 2 || got[0] != "bk-1" || got[1] != "bk-2" {
+			t.Errorf("got %v, want [bk-1 bk-2]", got)
+		}
+
+		got2, err := api.GetListBookmarks(context.Background(), "list-2")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got2) != 1 || got2[0] != "bk-3" {
+			t.Errorf("got %v, want [bk-3]", got2)
+		}
+	})
+
+	t.Run("GetListBookmarks returns configured error", func(t *testing.T) {
+		want := errors.New("get list bookmarks failed")
+		api := &mockAPI{getListBookmarksErr: want}
+		_, err := api.GetListBookmarks(context.Background(), "list-1")
+		if err != want {
 			t.Errorf("got %v, want %v", err, want)
 		}
 	})
