@@ -389,6 +389,7 @@ notifications:
 |-------|------|----------|-------------|
 | `channels` | map | Yes | Named notification channels, each with a Shoutrrr URL |
 | `default` | string | No | Channel name to use when a rule has no `notify` override |
+| `notifyOnError` | bool | No | `false` | Send a notification to the default channel when config validation fails at startup |
 
 Channel URLs follow the [Shoutrrr URL format](https://github.com/nicholas-fedor/shoutrrr/blob/main/docs/services/overview.md). URLs are validated at startup -- an invalid URL prevents Karaclean from starting.
 
@@ -418,6 +419,12 @@ Each notification includes the rule name, action counts, and is sent only when t
 ### Notification Failures
 
 Notification delivery is best-effort. If a notification fails to send, the error is logged but does not affect the run outcome -- bookmarks are still processed normally.
+
+### Error Notifications
+
+Set `notifyOnError: true` in the `notifications` block to receive a notification when config validation fails at startup. This is useful when running karaclean as an unattended Docker sidecar -- you'll be alerted via your notification channel instead of having to check container logs.
+
+The error notification is sent to the `default` channel. If no default channel is set, the notification is silently skipped. Even if the YAML file has syntax errors, karaclean attempts a lenient parse to extract the notifications section and deliver the error alert.
 
 ## Building from Source
 

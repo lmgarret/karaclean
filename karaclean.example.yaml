@@ -26,6 +26,7 @@ notifications:
     # telegram:
     #   url: "telegram://TOKEN@telegram?channels=CHAT_ID"
   default: my-ntfy   # Channel used when a rule has no "notify" override
+  notifyOnError: true  # Send a notification when config validation fails at startup
 
 rules:
   # Archive RSS bookmarks older than 30 days, unless favourited.
@@ -102,3 +103,6 @@ rules:
 # Per-rule overrides:
 #   dryRun: true/false  - override global dry-run for this rule (omit to inherit global)
 #   notify: "channel"   - send this rule's summary to a specific notification channel
+#
+# Notification options:
+#   notifyOnError: true  - send notification to default channel on config validation failure
