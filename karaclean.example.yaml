@@ -59,6 +59,26 @@ rules:
       archived: true         # Skip if already archived
     action: archive
 
+  # Archive bookmarks in the "Read Later" list after 14 days.
+  - name: archive-read-later
+    conditions:
+      olderThan: "14d"
+      inList: "Read Later"   # Match bookmarks in this list (case-sensitive)
+    unless:
+      favourited: true
+    action: archive
+
+  # Delete old RSS bookmarks, but protect bookmarks in curated lists.
+  # - name: delete-old-rss-except-curated
+  #   conditions:
+  #     olderThan: "60d"
+  #     source: rss
+  #   unless:
+  #     inList:                # Accept a list of names (OR -- any match protects)
+  #       - "Best Articles"
+  #       - "Reference"
+  #   action: delete
+
 # All conditions (AND semantics -- all must match):
 #   olderThan: "Nd"         - bookmark created more than N days/weeks/months/years ago
 #   source: "rss"           - bookmark ingested from this source
@@ -66,12 +86,14 @@ rules:
 #   favourited: true/false  - bookmark favourite/star status
 #   hasTag: "tag-name"      - bookmark has this exact tag (case-sensitive)
 #   lacksTag: "tag-name"    - bookmark does NOT have this tag (case-sensitive)
+#   inList: "name"          - bookmark belongs to this Karakeep list (or list of names, OR semantics)
 #
 # All exceptions (OR semantics -- any match skips the bookmark):
 #   favourited: true/false  - skip if bookmark matches this star status
 #   hasTag: "tag-name"      - skip if bookmark has this tag
 #   hasNote: true/false     - skip if bookmark has/lacks a personal note
 #   archived: true/false    - skip if bookmark matches this archive status
+#   inList: "name"          - skip if bookmark belongs to this list (or list of names)
 #
 # Actions:
 #   archive - set archived: true via Karakeep API

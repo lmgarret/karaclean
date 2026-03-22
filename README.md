@@ -8,7 +8,7 @@ A Docker sidecar that automatically cleans up Karakeep bookmarks based on declar
 
 Karaclean solves this by letting you define declarative YAML rules that describe which bookmarks to archive or delete, and when. It runs as a Docker sidecar alongside your Karakeep instance on a cron schedule, evaluating every bookmark against your rules each cycle.
 
-Safety is built in. A **dry-run mode** lets you preview exactly what would happen before any mutations execute. **Exception clauses** protect bookmarks you care about -- favourites, tagged items, bookmarks with personal notes. **Strict config validation** rejects unknown fields at startup, so a typo like `olderThen` is caught immediately instead of silently ignored.
+Safety is built in. A **dry-run mode** lets you preview exactly what would happen before any mutations execute. **Exception clauses** protect bookmarks you care about -- favourites, tagged items, bookmarks with personal notes, or bookmarks in specific lists. **Strict config validation** rejects unknown fields at startup, so a typo like `olderThen` is caught immediately instead of silently ignored.
 
 Note: this project has been an exploration of AI coding tools for me. Although I do use karaclean with my own Karakeep instance, use it at your own risk!
 
@@ -97,6 +97,7 @@ All specified conditions must match for a bookmark to be selected. Unspecified c
 | `favourited` | bool | `true` | `true` = only favourited bookmarks, `false` = only non-favourited |
 | `hasTag` | string | `"read-later"` | Match bookmarks that have this exact tag (case-sensitive) |
 | `lacksTag` | string | `"keep"` | Match bookmarks that do NOT have this tag (case-sensitive) |
+| `inList` | string or list | `"Read Later"` | Match bookmarks that belong to any of the specified Karakeep lists (OR semantics, case-sensitive). Accepts a single list name or a list of names. List names are validated at startup. |
 
 ### Exceptions (OR semantics)
 
@@ -108,6 +109,7 @@ If any exception matches, the bookmark is protected from the rule's action.
 | `hasTag` | string | `"important"` | Skip if bookmark has this tag (case-sensitive) |
 | `hasNote` | bool | `true` | Skip if bookmark has a personal note (whitespace-only notes count as empty) |
 | `archived` | bool | `true` | Skip if bookmark matches this archive status |
+| `inList` | string or list | `"Important"` | Skip if bookmark belongs to any of the specified lists (OR semantics, case-sensitive) |
 
 ## Rule Examples
 
@@ -167,7 +169,37 @@ Non-favourited bookmarks older than 60 days that lack the `keep` tag are archive
 
 An aggressive cleanup rule with no exceptions. All web-sourced bookmarks older than 365 days are permanently deleted.
 
-### 5. Archive mobile bookmarks older than 2 weeks unless they have notes
+### 5. Archive bookmarks in the "Read Later" list after 14 days
+
+```yaml
+- name: archive-read-later
+  conditions:
+    olderThan: "14d"
+    inList: "Read Later"
+  unless:
+    favourited: true
+  action: archive
+```
+
+Bookmarks in the "Read Later" list older than 14 days are archived. Favourited items are protected.
+
+### 6. Delete old RSS, but protect bookmarks in curated lists
+
+```yaml
+- name: delete-old-rss-except-curated
+  conditions:
+    olderThan: "60d"
+    source: rss
+  unless:
+    inList:
+      - "Best Articles"
+      - "Reference"
+  action: delete
+```
+
+RSS bookmarks older than 60 days are deleted -- unless they've been added to the "Best Articles" or "Reference" lists. The `inList` exception accepts a list of names (OR semantics: membership in any listed list protects the bookmark).
+
+### 7. Archive mobile bookmarks older than 2 weeks unless they have notes
 
 ```yaml
 - name: archive-mobile-quick
@@ -407,6 +439,8 @@ Karaclean validates your config file thoroughly at startup, before any rules exe
 - **Invalid cron expressions** in `schedule` are caught.
 - **Invalid timezone names** in `timezone` are caught.
 - **Empty tag values** in `hasTag` and `lacksTag` are rejected.
+- **Empty list names** in `inList` are rejected.
+- **List name validation** at startup: all list names referenced in `inList` conditions and exceptions are checked against the Karakeep API. If any configured list name doesn't exist, Karaclean reports all missing names and exits.
 - **All errors are collected and reported together**, not one at a time, so you can fix everything in a single pass.
 
 ## Built With
