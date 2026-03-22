@@ -8,5 +8,6 @@ notifications:
 rules:
   - name: broken
     conditions:
-    olderThan: "30d"
-  action: delete
+      olderThan: "30d"
+    action: delete
+    unknownField: "this causes strict decode to fail"

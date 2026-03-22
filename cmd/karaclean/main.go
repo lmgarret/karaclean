@@ -62,9 +62,11 @@ func main() {
 }
 
 // loadConfig loads and validates the configuration file.
+// Passes a ShoutrrrNotifier to Load so that config errors can be sent
+// via the configured notification channel when notifyOnError is true.
 func loadConfig(configPath string) *config.Config {
 	path := config.ResolvePath(configPath)
-	cfg, err := config.Load(path)
+	cfg, err := config.Load(path, &engine.ShoutrrrNotifier{})
 	if err != nil {
 		exitf("error: %v", err)
 	}
