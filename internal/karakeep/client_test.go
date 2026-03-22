@@ -326,6 +326,197 @@ func TestDeleteBookmark_Success204(t *testing.T) {
 	}
 }
 
+// listsResponse builds a minimal JSON response matching the ListLists response type.
+func listsResponse(lists []map[string]any) map[string]any {
+	return map[string]any{
+		"lists": lists,
+	}
+}
+
+func sampleList(id, name string) map[string]any {
+	return map[string]any{
+		"id":               id,
+		"name":             name,
+		"icon":             "list",
+		"public":           false,
+		"hasCollaborators": false,
+		"userRole":         "owner",
+	}
+}
+
+func TestListLists_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/lists" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(listsResponse([]map[string]any{
+			sampleList("list-1", "Read Later"),
+			sampleList("list-2", "RSS Feeds"),
+		}))
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	lists, err := client.ListLists(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(lists) != 2 {
+		t.Fatalf("expected 2 lists, got %d", len(lists))
+	}
+	if lists[0].ID != "list-1" || lists[0].Name != "Read Later" {
+		t.Errorf("unexpected first list: %+v", lists[0])
+	}
+	if lists[1].ID != "list-2" || lists[1].Name != "RSS Feeds" {
+		t.Errorf("unexpected second list: %+v", lists[1])
+	}
+}
+
+func TestListLists_ErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	_, err = client.ListLists(context.Background())
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "listing lists") {
+		t.Errorf("error %q does not contain 'listing lists'", err.Error())
+	}
+}
+
+func TestListLists_NetworkError(t *testing.T) {
+	client, err := karakeep.NewKarakeepClient("http://127.0.0.1:1", "any-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	_, err = client.ListLists(context.Background())
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "listing lists") {
+		t.Errorf("error %q does not contain 'listing lists'", err.Error())
+	}
+}
+
+func TestGetListBookmarks_SinglePage(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/lists/list-1/bookmarks" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(bookmarksResponse(
+			[]map[string]any{sampleBookmark("b1"), sampleBookmark("b2")},
+			nil,
+		))
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	ids, err := client.GetListBookmarks(context.Background(), "list-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ids) != 2 {
+		t.Fatalf("expected 2 IDs, got %d", len(ids))
+	}
+	if ids[0] != "b1" || ids[1] != "b2" {
+		t.Errorf("unexpected IDs: %v", ids)
+	}
+}
+
+func TestGetListBookmarks_Pagination(t *testing.T) {
+	reqCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqCount++
+		w.Header().Set("Content-Type", "application/json")
+		switch reqCount {
+		case 1:
+			cursor := "page2"
+			_ = json.NewEncoder(w).Encode(bookmarksResponse(
+				[]map[string]any{sampleBookmark("b1"), sampleBookmark("b2")},
+				&cursor,
+			))
+		default:
+			if r.URL.Query().Get("cursor") != "page2" {
+				t.Errorf("expected cursor=page2, got %q", r.URL.Query().Get("cursor"))
+			}
+			_ = json.NewEncoder(w).Encode(bookmarksResponse(
+				[]map[string]any{sampleBookmark("b3")},
+				nil,
+			))
+		}
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	ids, err := client.GetListBookmarks(context.Background(), "list-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ids) != 3 {
+		t.Fatalf("expected 3 IDs across 2 pages, got %d", len(ids))
+	}
+}
+
+func TestGetListBookmarks_Empty(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(bookmarksResponse(nil, nil))
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	ids, err := client.GetListBookmarks(context.Background(), "list-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ids == nil {
+		t.Error("expected empty slice, got nil")
+	}
+	if len(ids) != 0 {
+		t.Errorf("expected 0 IDs, got %d", len(ids))
+	}
+}
+
+func TestGetListBookmarks_ErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	client, err := karakeep.NewKarakeepClient(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("NewKarakeepClient: %v", err)
+	}
+	_, err = client.GetListBookmarks(context.Background(), "list-1")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "getting list bookmarks") {
+		t.Errorf("error %q does not contain 'getting list bookmarks'", err.Error())
+	}
+}
+
 func TestDeleteBookmark_ErrorStatus(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
