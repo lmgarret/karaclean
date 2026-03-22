@@ -152,10 +152,11 @@ None.
 | 260320-khk | Update README and example config with per-rule dryRun, bookmark size, notifications | 2026-03-20 | 88c6c38 | [260320-khk-readme-has-not-been-updated-with-the-las](./quick/260320-khk-readme-has-not-been-updated-with-the-las/) |
 | 260320-lfo | Fix HTTP 204 treated as error in DeleteBookmark | 2026-03-20 | f7ff86d | [260320-lfo-fix-http-204-treated-as-error-on-bookmar](./quick/260320-lfo-fix-http-204-treated-as-error-on-bookmar/) |
 | 260320-ls1 | Remove title duplication from notification body, add Summary: prefix | 2026-03-20 | d4843c7 | [260320-ls1-improve-notification-messages-remove-tit](./quick/260320-ls1-improve-notification-messages-remove-tit/) |
+| 260322-q37 | Add CLAUDE.md with workflow guardrails (docs, lint, test) | 2026-03-22 | 05e65d0 | [260322-q37-add-workflow-guardrails-docs-update-rule](./quick/260322-q37-add-workflow-guardrails-docs-update-rule/) |
 
 ## Session Continuity
 
 Last activity: 2026-03-22
-Last session: 2026-03-22T15:38:43.520Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-03-22T15:52:11.000Z
+Stopped at: Completed 260322-q37-PLAN.md
 Resume file: None
