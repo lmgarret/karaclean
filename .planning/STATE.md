@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Not started
 status: unknown
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-03-22T15:48:44.381Z"
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-03-22T18:07:14.858Z"
 last_activity: 2026-03-22
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20 after v1.1 milestone)
 
 **Core value:** Users can define flexible, declarative cleanup rules that keep their Karakeep instance lean without ever touching bookmarks they care about.
-**Current focus:** Phase 01 — list-based-bookmark-exclusion
+**Current focus:** Phase 01 — error-notification-on-invalid-config
 
 ## Current Position
 
-Phase: 01
-Current Plan: Not started
+Phase: 01 (error-notification-on-invalid-config) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -71,6 +70,7 @@ Current Plan: Not started
 | Phase 01 P01 | 4min | 2 tasks | 10 files |
 | Phase 01 P02 | 3min | 2 tasks | 4 files |
 | Phase 01 P03 | 4min | 2 tasks | 4 files |
+| Phase 01 P01 | 3min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -125,6 +125,9 @@ Recent decisions affecting current work:
 - [Phase 01]: ListLists does not paginate (API returns all lists in one call)
 - [Phase 01]: validateListNames collects ALL missing names before returning error (D-13)
 - [Phase 01]: PreloadListSets exported for direct testability; listSets passed as parameter for thread safety
+- [Phase 01]: ConfigErrorNotifier interface in config package mirrors engine.Notifier to avoid import cycle
+- [Phase 01]: Variadic notifier parameter on Load() for backward compatibility
+- [Phase 01]: Lenient fallback uses notificationsOnly struct without KnownFields for unknown-field error recovery
 
 ### Roadmap Evolution
 
@@ -132,6 +135,7 @@ Recent decisions affecting current work:
 - Phase 10 added: CI: run tests, lint, and build docker image
 - Phase 1 (next milestone) added: Notification system with per-rule channel routing (Slack, ntfy, Telegram, global default + per-rule override)
 - Phase 1 added: List-based bookmark exclusion — exclude bookmarks from rule actions if they belong to specified lists
+- Phase 1 added: Error notification on invalid config
 
 ### Pending Todos
 
@@ -157,6 +161,6 @@ None.
 ## Session Continuity
 
 Last activity: 2026-03-22
-Last session: 2026-03-22T15:52:11.000Z
-Stopped at: Completed 260322-q37-PLAN.md
+Last session: 2026-03-22T18:07:14.854Z
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None

@@ -58,7 +58,7 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 8. Scheduler and Deployment | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 9. Documentation | v1.0 | 1/1 | Complete | 2026-03-19 |
 | 10. CI: Tests, Lint, Docker | v1.0 | 2/2 | Complete | 2026-03-19 |
-| 01. Notification System | v1.1 | 3/3 | Complete | 2026-03-20 |
+| 01. Notification System | 1/1 | Complete   | 2026-03-22 | 2026-03-20 |
 | 01. List-based bookmark exclusion | v1.2 | 3/3 | Complete | 2026-03-22 |
 
 ### Phase 1: Error notification on invalid config
