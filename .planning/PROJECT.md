@@ -33,6 +33,10 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 - ✓ Notification messages include action counts, human-readable `Summary:` prefix, dry-run indication — v1.1
 - ✓ Best-effort delivery — notification failures logged, not fatal — v1.1
 
+### Validated
+
+- ✓ List-based bookmark exclusion — `inList` condition/exception excludes bookmarks by list membership — v1.2 Phase 01
+
 ### Active
 
 - [ ] Per-run deletion cap — halt if a single run would delete more than N bookmarks (SAFE-01)
@@ -47,12 +51,12 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 - Web UI — deferred; YAML config first
 - Multi-user support — single API key per container; additive if needed
 - Direct database access — HTTP API only to stay decoupled from Karakeep internals
-- Reading progress / highlights / list membership conditions — require N+1 API calls; defer to v2+
+- ~~Reading progress / highlights / list membership conditions — require N+1 API calls; defer to v2+~~ list membership delivered in v1.2
 - Push notifications / alerting — ~~out of scope for v1~~ delivered in v1.1 via Shoutrrr
 
 ## Context
 
-- **Status:** v1.1 shipped. Fully functional bookmark GC sidecar with notification support.
+- **Status:** v1.2 in progress. Phase 01 complete — list-based bookmark exclusion (`inList` conditions/exceptions).
 - **Tech stack:** Go 1.24+, oapi-codegen for Karakeep client, robfig/cron v3 for scheduling, go.yaml.in/yaml/v3 for config, github.com/nicholas-fedor/shoutrrr for multi-channel notifications
 - **LOC:** ~12,372 Go | 123 files in v1.1
 - **Submodule:** `karakeep-upstream/` contains Karakeep's source for API reference; do not modify it
@@ -95,4 +99,4 @@ Users can define flexible, declarative cleanup rules that keep their Karakeep in
 | HTTP 204 accepted as DELETE success | Karakeep returns 204 No Content on delete; 200 was incorrect expectation | ✓ Fixed — regression in v1.0 |
 
 ---
-*Last updated: 2026-03-20 after v1.1 milestone*
+*Last updated: 2026-03-22 after v1.2 Phase 01*
