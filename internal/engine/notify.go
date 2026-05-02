@@ -11,12 +11,13 @@ import (
 
 // RuleSummary records per-rule action counts for notification dispatch.
 type RuleSummary struct {
-	RuleName   string
-	Archived   int
-	Deleted    int
-	Excepted   int
-	Errors     int
-	TotalBytes int64
+	RuleName     string
+	Archived     int
+	Deleted      int
+	Excepted     int
+	Errors       int
+	DeletedBytes  int64
+	ArchivedBytes int64
 }
 
 // HasActivity returns true if this rule should trigger a notification.
@@ -68,14 +69,18 @@ func FormatNotification(rs *RuleSummary, _ bool) string {
 	fmt.Fprintf(&b, "Summary:")
 
 	if rs.Deleted > 0 {
-		if rs.TotalBytes > 0 {
-			fmt.Fprintf(&b, "\ndeleted: %d (%s)", rs.Deleted, HumanSize(rs.TotalBytes))
+		if rs.DeletedBytes > 0 {
+			fmt.Fprintf(&b, "\ndeleted: %d (%s)", rs.Deleted, HumanSize(rs.DeletedBytes))
 		} else {
 			fmt.Fprintf(&b, "\ndeleted: %d", rs.Deleted)
 		}
 	}
 	if rs.Archived > 0 {
-		fmt.Fprintf(&b, "\narchived: %d", rs.Archived)
+		if rs.ArchivedBytes > 0 {
+			fmt.Fprintf(&b, "\narchived: %d (%s)", rs.Archived, HumanSize(rs.ArchivedBytes))
+		} else {
+			fmt.Fprintf(&b, "\narchived: %d", rs.Archived)
+		}
 	}
 	if rs.Excepted > 0 {
 		fmt.Fprintf(&b, "\nexcepted: %d", rs.Excepted)
