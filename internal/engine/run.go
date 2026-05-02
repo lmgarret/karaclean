@@ -133,12 +133,13 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 				case "archive":
 					summary.Archived++
 					ruleSummaries[ruleIdx].Archived++
+					ruleSummaries[ruleIdx].ArchivedBytes += result.Size
 				case "delete":
 					summary.Deleted++
 					ruleSummaries[ruleIdx].Deleted++
+					ruleSummaries[ruleIdx].DeletedBytes += result.Size
 				}
 				summary.TotalBytes += result.Size
-				ruleSummaries[ruleIdx].TotalBytes += result.Size
 			}
 			matched = true
 			break
