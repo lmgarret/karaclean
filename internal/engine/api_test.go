@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/engine"
 )
 
 // mockAPI is a test double that implements engine.KarakeepAPI.

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lm/karaclean/internal/config"
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/engine"
 )
 
 func ptrBool(b bool) *bool   { return &b }

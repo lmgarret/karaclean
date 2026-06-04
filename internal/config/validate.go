@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lm/karaclean/internal/duration"
+	"github.com/lmgarret/karaclean/internal/duration"
 	"github.com/nicholas-fedor/shoutrrr"
 	"github.com/robfig/cron/v3"
 )

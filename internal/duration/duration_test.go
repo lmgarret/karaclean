@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lm/karaclean/internal/duration"
+	"github.com/lmgarret/karaclean/internal/duration"
 )
 
 func TestParse(t *testing.T) {

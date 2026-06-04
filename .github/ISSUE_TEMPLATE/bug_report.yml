@@ -1,0 +1,33 @@
+name: Bug report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include the relevant part of your karaclean.yaml if applicable. Redact any API keys.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version / image tag
+      description: e.g. latest, or a commit SHA
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log output (with secrets redacted).
+      render: shell
+    validations:
+      required: false

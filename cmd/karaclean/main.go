@@ -11,9 +11,9 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	"github.com/lm/karaclean/internal/config"
-	"github.com/lm/karaclean/internal/engine"
-	"github.com/lm/karaclean/internal/karakeep"
+	"github.com/lmgarret/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/karakeep"
 	"github.com/robfig/cron/v3"
 )
 

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lm/karaclean/internal/config"
-	"github.com/lm/karaclean/internal/duration"
+	"github.com/lmgarret/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/duration"
 )
 
 // MatchesConditions returns true if the bookmark satisfies all non-nil conditions (AND semantics).

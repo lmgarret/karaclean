@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/engine"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 )
 

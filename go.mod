@@ -1,4 +1,4 @@
-module github.com/lm/karaclean
+module github.com/lmgarret/karaclean
 
 go 1.26.1
 
