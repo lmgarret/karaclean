@@ -92,6 +92,35 @@ func TestFormatNotification(t *testing.T) {
 			dryRun: false,
 			want:   "Summary:\narchived: 5 (2.0 MB)",
 		},
+		{
+			name: "tagged only",
+			rs: &engine.RuleSummary{
+				RuleName: "flag-candidates",
+				Tagged:   7,
+			},
+			dryRun: false,
+			want:   "Summary:\ntagged: 7",
+		},
+		{
+			name: "unarchived and untagged",
+			rs: &engine.RuleSummary{
+				RuleName:   "resurface",
+				Unarchived: 2,
+				Untagged:   1,
+			},
+			dryRun: false,
+			want:   "Summary:\nunarchived: 2\nuntagged: 1",
+		},
+		{
+			name: "favourited and unfavourited",
+			rs: &engine.RuleSummary{
+				RuleName:     "stars",
+				Favourited:   3,
+				Unfavourited: 4,
+			},
+			dryRun: false,
+			want:   "Summary:\nfavourited: 3\nunfavourited: 4",
+		},
 	}
 
 	for _, tt := range tests {
@@ -149,6 +178,21 @@ func TestHasActivity(t *testing.T) {
 		{
 			name: "archived only",
 			rs:   &engine.RuleSummary{Archived: 1},
+			want: true,
+		},
+		{
+			name: "tagged only",
+			rs:   &engine.RuleSummary{Tagged: 1},
+			want: true,
+		},
+		{
+			name: "unarchived only",
+			rs:   &engine.RuleSummary{Unarchived: 1},
+			want: true,
+		},
+		{
+			name: "favourited only",
+			rs:   &engine.RuleSummary{Favourited: 1},
 			want: true,
 		},
 		{

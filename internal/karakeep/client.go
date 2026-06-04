@@ -99,6 +99,86 @@ func (c *KarakeepClient) ArchiveBookmark(ctx context.Context, id string) error {
 	return nil
 }
 
+// UnarchiveBookmark sets archived=false on the bookmark via PATCH /bookmarks/{id}.
+func (c *KarakeepClient) UnarchiveBookmark(ctx context.Context, id string) error {
+	archived := false
+	resp, err := c.inner.UpdateBookmarkWithResponse(ctx, id, UpdateBookmarkJSONRequestBody{
+		Archived: &archived,
+	})
+	if err != nil {
+		return fmt.Errorf("unarchive bookmark %s: %w", id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unarchive bookmark %s: unexpected status %d", id, resp.StatusCode())
+	}
+	return nil
+}
+
+// FavouriteBookmark sets favourited=true on the bookmark via PATCH /bookmarks/{id}.
+func (c *KarakeepClient) FavouriteBookmark(ctx context.Context, id string) error {
+	return c.setFavourite(ctx, id, true)
+}
+
+// UnfavouriteBookmark sets favourited=false on the bookmark via PATCH /bookmarks/{id}.
+func (c *KarakeepClient) UnfavouriteBookmark(ctx context.Context, id string) error {
+	return c.setFavourite(ctx, id, false)
+}
+
+// setFavourite issues a PATCH that sets the bookmark's favourited flag.
+func (c *KarakeepClient) setFavourite(ctx context.Context, id string, favourited bool) error {
+	verb := "favourite"
+	if !favourited {
+		verb = "unfavourite"
+	}
+	resp, err := c.inner.UpdateBookmarkWithResponse(ctx, id, UpdateBookmarkJSONRequestBody{
+		Favourited: &favourited,
+	})
+	if err != nil {
+		return fmt.Errorf("%s bookmark %s: %w", verb, id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("%s bookmark %s: unexpected status %d", verb, id, resp.StatusCode())
+	}
+	return nil
+}
+
+// AddTagToBookmark attaches a tag by name via POST /bookmarks/{id}/tags.
+// Karakeep creates the tag if it does not yet exist.
+func (c *KarakeepClient) AddTagToBookmark(ctx context.Context, id, tagName string) error {
+	var body AttachTagsToBookmarkJSONRequestBody
+	body.Tags = append(body.Tags, struct {
+		AttachedBy *AttachTagsToBookmarkJSONBodyTagsAttachedBy `json:"attachedBy,omitempty"`
+		TagId      *string                                     `json:"tagId,omitempty"`
+		TagName    *string                                     `json:"tagName,omitempty"`
+	}{TagName: &tagName})
+	resp, err := c.inner.AttachTagsToBookmarkWithResponse(ctx, id, body)
+	if err != nil {
+		return fmt.Errorf("tag bookmark %s: %w", id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("tag bookmark %s: unexpected status %d", id, resp.StatusCode())
+	}
+	return nil
+}
+
+// RemoveTagFromBookmark detaches a tag by name via DELETE /bookmarks/{id}/tags.
+func (c *KarakeepClient) RemoveTagFromBookmark(ctx context.Context, id, tagName string) error {
+	var body DetachTagsFromBookmarkJSONRequestBody
+	body.Tags = append(body.Tags, struct {
+		AttachedBy *DetachTagsFromBookmarkJSONBodyTagsAttachedBy `json:"attachedBy,omitempty"`
+		TagId      *string                                       `json:"tagId,omitempty"`
+		TagName    *string                                       `json:"tagName,omitempty"`
+	}{TagName: &tagName})
+	resp, err := c.inner.DetachTagsFromBookmarkWithResponse(ctx, id, body)
+	if err != nil {
+		return fmt.Errorf("untag bookmark %s: %w", id, err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("untag bookmark %s: unexpected status %d", id, resp.StatusCode())
+	}
+	return nil
+}
+
 // DeleteBookmark permanently removes the bookmark via DELETE /bookmarks/{id}.
 func (c *KarakeepClient) DeleteBookmark(ctx context.Context, id string) error {
 	resp, err := c.inner.DeleteBookmarkWithResponse(ctx, id)

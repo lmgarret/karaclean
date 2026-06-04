@@ -32,6 +32,101 @@ func TestRunSummary_String_ZeroBytes(t *testing.T) {
 	}
 }
 
+func TestRunSummary_String_OmitsZeroExtraActions(t *testing.T) {
+	// Only archive/delete and the run totals appear when the new counters are zero.
+	s := engine.RunSummary{Archived: 1, Deleted: 1}
+	got := s.String()
+	for _, unwanted := range []string{"unarchived", "tagged", "untagged", "favourited", "unfavourited"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("String() = %q, should not contain %q when zero", got, unwanted)
+		}
+	}
+}
+
+func TestRunSummary_String_ShowsExtraActions(t *testing.T) {
+	s := engine.RunSummary{Tagged: 3, Unarchived: 2, Favourited: 1}
+	got := s.String()
+	for _, want := range []string{"tagged=3", "unarchived=2", "favourited=1"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("String() = %q, missing %q", got, want)
+		}
+	}
+}
+
+func TestRun_TagAction(t *testing.T) {
+	old := time.Now().Add(-100 * 24 * time.Hour)
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+		{ID: "bk-2", CreatedAt: time.Now()}, // too new, no match
+	}}
+	rules := []config.Rule{
+		{
+			Name:       "flag-delete-candidates",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d")},
+			Action:     "tag",
+			Tag:        ptrStr("delete-candidate"),
+		},
+	}
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if got.Tagged != 1 || got.NoMatch != 1 {
+		t.Errorf("summary = %+v, want Tagged=1 NoMatch=1", got)
+	}
+	if len(api.addTagCalls) != 1 || api.addTagCalls[0].id != "bk-1" || api.addTagCalls[0].tag != "delete-candidate" {
+		t.Errorf("addTagCalls = %v, want [{bk-1 delete-candidate}]", api.addTagCalls)
+	}
+}
+
+func TestRun_UnarchiveAction(t *testing.T) {
+	old := time.Now().Add(-100 * 24 * time.Hour)
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old, Archived: true},
+	}}
+	rules := []config.Rule{
+		{
+			Name:       "resurface",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d"), Archived: ptrBool(true)},
+			Action:     "unarchive",
+		},
+	}
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if got.Unarchived != 1 {
+		t.Errorf("summary = %+v, want Unarchived=1", got)
+	}
+	if len(api.unarchiveBookmarkCalls) != 1 || api.unarchiveBookmarkCalls[0] != "bk-1" {
+		t.Errorf("unarchiveBookmarkCalls = %v, want [bk-1]", api.unarchiveBookmarkCalls)
+	}
+}
+
+func TestRun_FavouriteAction(t *testing.T) {
+	old := time.Now().Add(-100 * 24 * time.Hour)
+	api := &mockAPI{listBookmarksRet: []engine.Bookmark{
+		{ID: "bk-1", CreatedAt: old},
+	}}
+	rules := []config.Rule{
+		{
+			Name:       "star-old",
+			Conditions: &config.Conditions{OlderThan: ptrStr("30d")},
+			Action:     "favourite",
+		},
+	}
+	got, err := engine.Run(context.Background(), api, rules, false, nil, nil)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	if got.Favourited != 1 {
+		t.Errorf("summary = %+v, want Favourited=1", got)
+	}
+	if len(api.favouriteCalls) != 1 || api.favouriteCalls[0] != "bk-1" {
+		t.Errorf("favouriteCalls = %v, want [bk-1]", api.favouriteCalls)
+	}
+}
+
 func TestRun(t *testing.T) {
 	now := time.Now()
 	oldCreatedAt := now.Add(-100 * 24 * time.Hour) // 100 days ago

@@ -11,20 +11,48 @@ import (
 
 // RuleSummary records per-rule action counts for notification dispatch.
 type RuleSummary struct {
-	RuleName     string
-	Archived     int
-	Deleted      int
-	Excepted     int
-	Errors       int
+	RuleName      string
+	Archived      int
+	Unarchived    int
+	Deleted       int
+	Tagged        int
+	Untagged      int
+	Favourited    int
+	Unfavourited  int
+	Excepted      int
+	Errors        int
 	DeletedBytes  int64
 	ArchivedBytes int64
 }
 
+// record increments the counter for a successfully executed action. Byte sizes
+// are tracked only for archive/delete, where reclaimable content size is meaningful.
+func (s *RuleSummary) record(action string, size int64) {
+	switch action {
+	case "archive":
+		s.Archived++
+		s.ArchivedBytes += size
+	case "unarchive":
+		s.Unarchived++
+	case "delete":
+		s.Deleted++
+		s.DeletedBytes += size
+	case "tag":
+		s.Tagged++
+	case "untag":
+		s.Untagged++
+	case "favourite":
+		s.Favourited++
+	case "unfavourite":
+		s.Unfavourited++
+	}
+}
+
 // HasActivity returns true if this rule should trigger a notification.
-// Per user decision: notify only when deleted > 0 OR archived > 0 OR errors > 0.
-// Excepted-only rules are silent.
+// Notify when any action was taken or an error occurred; excepted-only rules are silent.
 func (s *RuleSummary) HasActivity() bool {
-	return s.Deleted > 0 || s.Archived > 0 || s.Errors > 0
+	actions := s.Archived + s.Unarchived + s.Deleted + s.Tagged + s.Untagged + s.Favourited + s.Unfavourited
+	return actions > 0 || s.Errors > 0
 }
 
 // Notifier sends a notification message to a URL. Implementations:
@@ -59,8 +87,9 @@ func (n *ShoutrrrNotifier) Send(url, message, title string) error {
 // dry-run indicator are conveyed via the separate title (FormatNotificationTitle).
 //
 //	Summary:
-//	deleted: N (X.X MB)   <- size only when TotalBytes > 0
-//	archived: N           <- only when > 0
+//	deleted: N (X.X MB)   <- size shown when bytes > 0
+//	archived: N (X.X MB)
+//	tagged: N             <- each action line only when > 0
 //	excepted: N           <- only when > 0
 //	errors: N             <- only when > 0
 func FormatNotification(rs *RuleSummary, _ bool) string {
@@ -68,20 +97,25 @@ func FormatNotification(rs *RuleSummary, _ bool) string {
 
 	fmt.Fprintf(&b, "Summary:")
 
-	if rs.Deleted > 0 {
-		if rs.DeletedBytes > 0 {
-			fmt.Fprintf(&b, "\ndeleted: %d (%s)", rs.Deleted, HumanSize(rs.DeletedBytes))
+	appendLine := func(label string, count int, bytes int64) {
+		if count <= 0 {
+			return
+		}
+		if bytes > 0 {
+			fmt.Fprintf(&b, "\n%s: %d (%s)", label, count, HumanSize(bytes))
 		} else {
-			fmt.Fprintf(&b, "\ndeleted: %d", rs.Deleted)
+			fmt.Fprintf(&b, "\n%s: %d", label, count)
 		}
 	}
-	if rs.Archived > 0 {
-		if rs.ArchivedBytes > 0 {
-			fmt.Fprintf(&b, "\narchived: %d (%s)", rs.Archived, HumanSize(rs.ArchivedBytes))
-		} else {
-			fmt.Fprintf(&b, "\narchived: %d", rs.Archived)
-		}
-	}
+
+	appendLine("deleted", rs.Deleted, rs.DeletedBytes)
+	appendLine("archived", rs.Archived, rs.ArchivedBytes)
+	appendLine("unarchived", rs.Unarchived, 0)
+	appendLine("tagged", rs.Tagged, 0)
+	appendLine("untagged", rs.Untagged, 0)
+	appendLine("favourited", rs.Favourited, 0)
+	appendLine("unfavourited", rs.Unfavourited, 0)
+
 	if rs.Excepted > 0 {
 		fmt.Fprintf(&b, "\nexcepted: %d", rs.Excepted)
 	}

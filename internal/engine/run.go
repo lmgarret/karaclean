@@ -4,26 +4,78 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/lmgarret/karaclean/internal/config"
 )
 
 // RunSummary records the outcome of a single Run() invocation.
-// Field values sum to the total bookmark count: Archived + Deleted + NoMatch + Excepted + Errors.
+// The per-action counters plus NoMatch + Excepted + Errors sum to the total
+// bookmark count.
 type RunSummary struct {
-	Archived   int   `json:"archived"`
-	Deleted    int   `json:"deleted"`
-	NoMatch    int   `json:"no_match"`
-	Excepted   int   `json:"excepted"`
-	Errors     int   `json:"errors"`
-	TotalBytes int64 `json:"total_bytes"`
+	Archived     int   `json:"archived"`
+	Unarchived   int   `json:"unarchived"`
+	Deleted      int   `json:"deleted"`
+	Tagged       int   `json:"tagged"`
+	Untagged     int   `json:"untagged"`
+	Favourited   int   `json:"favourited"`
+	Unfavourited int   `json:"unfavourited"`
+	NoMatch      int   `json:"no_match"`
+	Excepted     int   `json:"excepted"`
+	Errors       int   `json:"errors"`
+	TotalBytes   int64 `json:"total_bytes"`
+}
+
+// record increments the counter for a successfully executed action and adds
+// its byte size to the running total.
+func (s *RunSummary) record(action string, size int64) {
+	switch action {
+	case "archive":
+		s.Archived++
+	case "unarchive":
+		s.Unarchived++
+	case "delete":
+		s.Deleted++
+	case "tag":
+		s.Tagged++
+	case "untag":
+		s.Untagged++
+	case "favourite":
+		s.Favourited++
+	case "unfavourite":
+		s.Unfavourited++
+	}
+	s.TotalBytes += size
 }
 
 // String returns a key=value summary suitable for structured log output.
+// archive, delete and the run totals are always shown; the remaining action
+// counters are included only when non-zero to keep common output compact.
 func (s RunSummary) String() string {
-	base := fmt.Sprintf("archived=%d deleted=%d no_match=%d excepted=%d errors=%d",
-		s.Archived, s.Deleted, s.NoMatch, s.Excepted, s.Errors)
+	parts := []string{fmt.Sprintf("archived=%d", s.Archived)}
+	if s.Unarchived > 0 {
+		parts = append(parts, fmt.Sprintf("unarchived=%d", s.Unarchived))
+	}
+	parts = append(parts, fmt.Sprintf("deleted=%d", s.Deleted))
+	if s.Tagged > 0 {
+		parts = append(parts, fmt.Sprintf("tagged=%d", s.Tagged))
+	}
+	if s.Untagged > 0 {
+		parts = append(parts, fmt.Sprintf("untagged=%d", s.Untagged))
+	}
+	if s.Favourited > 0 {
+		parts = append(parts, fmt.Sprintf("favourited=%d", s.Favourited))
+	}
+	if s.Unfavourited > 0 {
+		parts = append(parts, fmt.Sprintf("unfavourited=%d", s.Unfavourited))
+	}
+	parts = append(parts,
+		fmt.Sprintf("no_match=%d", s.NoMatch),
+		fmt.Sprintf("excepted=%d", s.Excepted),
+		fmt.Sprintf("errors=%d", s.Errors),
+	)
+	base := strings.Join(parts, " ")
 	if s.TotalBytes > 0 {
 		base += fmt.Sprintf(" total_size=%s", HumanSize(s.TotalBytes))
 	}
@@ -124,22 +176,17 @@ func Run(ctx context.Context, api KarakeepAPI, rules []config.Rule, dryRun bool,
 				break
 			}
 			effectiveDryRun := ResolveRuleDryRun(rule.DryRun, dryRun)
-			result := ExecuteAction(ctx, api, rule.Action, b, rule.Name, effectiveDryRun)
+			param := ""
+			if rule.Tag != nil {
+				param = *rule.Tag
+			}
+			result := ExecuteAction(ctx, api, rule.Action, b, rule.Name, param, effectiveDryRun)
 			if result.Err != nil {
 				summary.Errors++
 				ruleSummaries[ruleIdx].Errors++
 			} else {
-				switch rule.Action {
-				case "archive":
-					summary.Archived++
-					ruleSummaries[ruleIdx].Archived++
-					ruleSummaries[ruleIdx].ArchivedBytes += result.Size
-				case "delete":
-					summary.Deleted++
-					ruleSummaries[ruleIdx].Deleted++
-					ruleSummaries[ruleIdx].DeletedBytes += result.Size
-				}
-				summary.TotalBytes += result.Size
+				summary.record(rule.Action, result.Size)
+				ruleSummaries[ruleIdx].record(rule.Action, result.Size)
 			}
 			matched = true
 			break

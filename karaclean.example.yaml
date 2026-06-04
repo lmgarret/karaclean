@@ -69,6 +69,25 @@ rules:
       favourited: true
     action: archive
 
+  # Safer than deleting: tag old archived bookmarks as deletion candidates so
+  # you can review them in Karakeep before anything is removed.
+  - name: flag-stale-for-review
+    conditions:
+      olderThan: "90d"
+      archived: true
+    unless:
+      hasTag: keep-forever
+      hasNote: true
+    action: tag
+    tag: delete-candidate    # Required for action: tag / untag
+
+  # Pull bookmarks tagged "revisit" back out of the archive so they resurface.
+  - name: resurface-flagged
+    conditions:
+      archived: true
+      hasTag: revisit
+    action: unarchive
+
   # Delete old RSS bookmarks, but protect bookmarks in curated lists.
   # - name: delete-old-rss-except-curated
   #   conditions:
@@ -96,9 +115,17 @@ rules:
 #   archived: true/false    - skip if bookmark matches this archive status
 #   inList: "name"          - skip if bookmark belongs to this list (or list of names)
 #
-# Actions:
-#   archive - set archived: true via Karakeep API
-#   delete  - permanently remove via Karakeep API
+# Actions (the "action" field; only "delete" is irreversible):
+#   archive     - set archived: true via Karakeep API
+#   unarchive   - set archived: false via Karakeep API
+#   delete      - permanently remove via Karakeep API
+#   tag         - attach a tag (requires "tag"); created if it doesn't exist
+#   untag       - detach a tag (requires "tag")
+#   favourite   - set favourited: true via Karakeep API
+#   unfavourite - set favourited: false via Karakeep API
+#
+# Action parameters:
+#   tag: "name"  - tag to attach/detach; REQUIRED for tag/untag, invalid for other actions
 #
 # Per-rule overrides:
 #   dryRun: true/false  - override global dry-run for this rule (omit to inherit global)

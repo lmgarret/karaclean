@@ -63,6 +63,7 @@ type Rule struct {
 	Conditions *Conditions `yaml:"conditions"`
 	Unless     *Exceptions `yaml:"unless"`
 	Action     string      `yaml:"action"`
+	Tag        *string     `yaml:"tag"`
 	DryRun     *bool       `yaml:"dryRun"`
 	Notify     *string     `yaml:"notify"`
 }
