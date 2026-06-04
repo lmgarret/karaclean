@@ -1,5 +1,9 @@
 # Karaclean
 
+[![CI](https://github.com/lmgarret/karaclean/actions/workflows/ci.yml/badge.svg)](https://github.com/lmgarret/karaclean/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lemonase/karaclean)](https://goreportcard.com/report/github.com/lemonase/karaclean)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A Docker sidecar that automatically cleans up Karakeep bookmarks based on declarative YAML rules.
 
 ## What is Karaclean?
@@ -449,6 +453,16 @@ Karaclean validates your config file thoroughly at startup, before any rules exe
 - **Empty list names** in `inList` are rejected.
 - **List name validation** at startup: all list names referenced in `inList` conditions and exceptions are checked against the Karakeep API. If any configured list name doesn't exist, Karaclean reports all missing names and exits.
 - **All errors are collected and reported together**, not one at a time, so you can fix everything in a single pass.
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set
+up the project and the checks to run before opening a pull request. For security
+issues, please follow the [security policy](SECURITY.md).
+
+## License
+
+Karaclean is released under the [MIT License](LICENSE).
 
 ## Built With
 
