@@ -3,8 +3,8 @@ package engine_test
 import (
 	"testing"
 
-	"github.com/lm/karaclean/internal/config"
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/engine"
 )
 
 func TestFormatNotification(t *testing.T) {

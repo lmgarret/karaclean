@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lm/karaclean/internal/config"
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/engine"
 )
 
 func strPtr(s string) *string  { return &s }

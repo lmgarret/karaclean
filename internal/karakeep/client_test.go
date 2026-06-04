@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lm/karaclean/internal/karakeep"
+	"github.com/lmgarret/karaclean/internal/karakeep"
 )
 
 func TestCheckAuth_Success(t *testing.T) {

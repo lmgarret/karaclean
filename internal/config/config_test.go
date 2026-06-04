@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lm/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/config"
 )
 
 func strPtr(s string) *string { return &s }

@@ -1,7 +1,7 @@
 # Karaclean
 
 [![CI](https://github.com/lmgarret/karaclean/actions/workflows/ci.yml/badge.svg)](https://github.com/lmgarret/karaclean/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/lemonase/karaclean)](https://goreportcard.com/report/github.com/lemonase/karaclean)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lmgarret/karaclean)](https://goreportcard.com/report/github.com/lmgarret/karaclean)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A Docker sidecar that automatically cleans up Karakeep bookmarks based on declarative YAML rules.

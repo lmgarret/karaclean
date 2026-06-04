@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lm/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/config"
 )
 
 func validConfig() config.Config {

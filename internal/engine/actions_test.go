@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lm/karaclean/internal/engine"
+	"github.com/lmgarret/karaclean/internal/engine"
 )
 
 func TestExecuteAction_ArchiveLive(t *testing.T) {

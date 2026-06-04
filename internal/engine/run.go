@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/lm/karaclean/internal/config"
+	"github.com/lmgarret/karaclean/internal/config"
 )
 
 // RunSummary records the outcome of a single Run() invocation.
