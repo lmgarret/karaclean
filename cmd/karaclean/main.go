@@ -17,13 +17,28 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+// Build-time version info, injected via -ldflags (see Dockerfile).
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	// Step 0: Parse CLI flags
 	var configPath string
 	var dryRunFlag bool
+	var showVersion bool
 	flag.StringVar(&configPath, "config", "", "path to config file")
 	flag.BoolVar(&dryRunFlag, "dry-run", false, "enable dry-run mode (no mutations)")
+	flag.BoolVar(&showVersion, "version", false, "print version information and exit")
 	flag.Parse()
+
+	// Step 0.5: Print version and exit if requested
+	if showVersion {
+		fmt.Println(versionString(version, commit, date))
+		return
+	}
 
 	// Step 1: Load config
 	cfg := loadConfig(configPath)
@@ -159,6 +174,11 @@ func runScheduler(ctx context.Context, cfg *config.Config, client engine.Karakee
 func exitf(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 	os.Exit(1)
+}
+
+// versionString formats the build-time version information for --version.
+func versionString(version, commit, date string) string {
+	return fmt.Sprintf("karaclean %s (commit %s, built %s)", version, commit, date)
 }
 
 // requireEnv returns the value of the named environment variable,

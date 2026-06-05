@@ -1,0 +1,173 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (e.g. 1.2.3). Leave empty to auto-detect from tags.'
+        required: false
+        type: string
+
+jobs:
+  resolve-version:
+    name: Resolve release version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      name: ${{ steps.version.outputs.name }}
+      body: ${{ steps.body.outputs.body }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install missing language_data dependency
+        run: pip install language_data
+
+      - name: Find previous tag
+        id: prev_tag
+        run: |
+          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate AI changelog
+        id: changelog
+        uses: nosovj/llm-release-action@v1
+        with:
+          model: anthropic/claude-sonnet-4-6
+          model_analysis: anthropic/claude-haiku-4-5
+          current_version: ${{ steps.prev_tag.outputs.tag }}
+          changelog_config: |
+            default:
+              languages: [en]
+              tone: professional
+              sections: [breaking, features, improvements, fixes]
+              benefit_focused: true
+              include_infrastructure: false
+              summary_only: false
+              emojis: true
+          context_files: README.md,CLAUDE.md
+          max_commits: 50
+          temperature: 0.2
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Generate commit log
+        id: commitlog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          LOG=$(git log --oneline "${PREVIOUS_TAG}..HEAD" 2>/dev/null || git log --oneline)
+          {
+            echo "log<<COMMITLOG_EOF"
+            echo "$LOG"
+            echo "COMMITLOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve release version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            RAW="${{ inputs.version || steps.changelog.outputs.next_version || 'nightly' }}"
+            VERSION="${RAW#v}"
+          fi
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "name=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Compose release body
+        id: body
+        env:
+          VERSION: ${{ steps.version.outputs.name }}
+          COMMITS: ${{ steps.commitlog.outputs.log }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelogs && fromJSON(steps.changelog.outputs.changelogs).default.en || '' }}
+        run: |
+          IMAGE="ghcr.io/${{ github.repository }}"
+          {
+            echo "body<<BODY_EOF"
+            if [ -n "$CHANGELOG" ]; then
+              echo "$CHANGELOG"
+              echo ""
+              echo "---"
+              echo ""
+            fi
+            echo "### Docker image"
+            echo ""
+            echo "Published to \`${IMAGE}\` (multi-arch: linux/amd64, linux/arm64):"
+            echo ""
+            echo '```'
+            echo "${IMAGE}:${VERSION}   # immutable, exact release"
+            echo "${IMAGE}:${VERSION%.*} # latest patch on this minor"
+            echo "${IMAGE}:${VERSION%%.*} # latest release on this major"
+            echo "${IMAGE}:latest        # newest stable release"
+            echo '```'
+            echo ""
+            echo "<details><summary>Full commit log</summary>"
+            echo ""
+            echo '```'
+            echo "$COMMITS"
+            echo '```'
+            echo "</details>"
+            echo "BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  docker:
+    name: Build and push Docker image
+    needs: resolve-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          # No-prefix semver ladder. metadata-action auto-suppresses `latest`
+          # and the bare major for pre-releases (e.g. v1.2.3-rc1) and major 0.
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.resolve-version.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.resolve-version.outputs.tag }}
+            type=semver,pattern={{major}},value=${{ needs.resolve-version.outputs.tag }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.resolve-version.outputs.name }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.repository.updated_at }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: [resolve-version, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create versioned release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.resolve-version.outputs.tag }}
+          name: ${{ needs.resolve-version.outputs.tag }}
+          body: ${{ needs.resolve-version.outputs.body }}
+          generate_release_notes: false

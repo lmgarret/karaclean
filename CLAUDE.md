@@ -22,5 +22,16 @@ Go Docker sidecar for Karakeep bookmark cleanup. Declarative YAML rules, cron-sc
 
 - Go (module: github.com/lmgarret/karaclean)
 - golangci-lint v2.11 (binary at ~/go/bin/golangci-lint)
-- Docker multi-stage build with scratch final image
+- Docker multi-stage build with scratch final image, multi-arch (amd64 + arm64)
 - CI: GitHub Actions (golangci-lint-action@v9, go test -race)
+
+## Releases
+
+- Tag-driven: pushing a `vX.Y.Z` git tag runs `.github/workflows/release.yml`.
+- Docker tags published per release: `X.Y.Z`, `X.Y`, `X`, and `latest` (= newest
+  release). Main-branch builds publish `edge` + commit `<sha>` (see `ci.yml`).
+- Changelog is AI-generated from commits via `nosovj/llm-release-action`; requires an
+  `ANTHROPIC_API_KEY` repository secret. No `CHANGELOG.md` is committed -- the changelog
+  lives in GitHub Releases.
+- Version is stamped into the binary via `-ldflags` (`main.version/commit/date`),
+  exposed by `--version`. Keep the README Image Tags table in sync with tag changes.
