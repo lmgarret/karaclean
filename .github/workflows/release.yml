@@ -36,6 +36,11 @@ jobs:
         id: prev_tag
         run: |
           PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          # Legacy tags use the vX.Y form (no patch); nosovj/llm-release-action
+          # requires full semver for current_version, so normalize vX.Y -> vX.Y.0.
+          if [[ "$PREV" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
+            PREV="${PREV}.0"
+          fi
           echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
 
       - name: Generate AI changelog
