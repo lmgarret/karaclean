@@ -104,7 +104,9 @@ The `action` field selects what karaclean does with each matched bookmark. Only 
 | `favourite` | Star the bookmark (favourited = `true`) | — | ✅ (`unfavourite`) |
 | `unfavourite` | Unstar the bookmark (favourited = `false`) | — | ✅ (`favourite`) |
 
-> **Tip — review before you delete.** Rather than deleting straight away, point a `tag` rule at the same conditions you'd use for `delete` to flag candidates (e.g. `tag: delete-candidate`). Browse that tag inside Karakeep for a final manual pass, then either let a `delete` rule clear them or remove the tag from the keepers with `untag`.
+> **Testing changes safely.** Before letting any rule run live, preview it with [dry-run mode](#dry-run-mode) — it logs exactly what each rule *would* do without touching a single bookmark. This is the recommended way to validate a new or edited rule, especially anything using `delete`. Dry-run works for every action, including the destructive ones.
+>
+> **A standing review workflow.** Dry-run is great for vetting a rule, but its output lives in logs. If you'd rather curate inside Karakeep itself, use `tag` as a non-destructive stand-in for `delete`: point a `tag` rule at the conditions you'd eventually delete on (e.g. `tag: delete-candidate`), then browse that tag in Karakeep for a periodic manual pass. Delete the survivors with a later `delete` rule, or clear the tag from keepers with `untag`.
 
 ### Conditions (AND semantics)
 
