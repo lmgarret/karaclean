@@ -50,8 +50,10 @@ jobs:
         id: meta
         with:
           images: ghcr.io/${{ github.repository }}
+          # `latest` is owned by tagged releases (see release.yml). Main-branch
+          # builds publish the rolling `edge` tag plus the exact commit SHA.
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,prefix=
       - uses: docker/build-push-action@v6
         with:
@@ -59,3 +61,7 @@ jobs:
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=0.0.0-edge+${{ github.sha }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.repository.updated_at }}

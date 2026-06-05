@@ -83,6 +83,15 @@ func containsStr(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
 
+func TestVersionString(t *testing.T) {
+	got := versionString("1.4.2", "abc1234", "2026-06-05")
+	for _, want := range []string{"karaclean", "1.4.2", "abc1234", "2026-06-05"} {
+		if !containsStr(got, want) {
+			t.Errorf("versionString output %q does not contain %q", got, want)
+		}
+	}
+}
+
 // testAPI is a minimal mock implementing only what validateListNames needs.
 type testAPI struct {
 	listListsRet []engine.ListInfo

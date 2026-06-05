@@ -42,3 +42,27 @@ go test -race ./...
 
 Keep commits focused and write a clear description of *what* changed and *why*.
 Link any related issues. That's it -- no rigid template required.
+
+The release changelog is generated from commit messages since the previous tag, so
+clear, descriptive commit subjects make for a better changelog.
+
+## Releasing
+
+Releases are tag-driven. To cut a release (maintainers):
+
+```sh
+git tag v1.4.0
+git push origin v1.4.0
+```
+
+Pushing a `vX.Y.Z` tag triggers [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which:
+
+1. Builds the multi-arch (`amd64` + `arm64`) Docker image.
+2. Publishes the tag ladder to GHCR: `1.4.0`, `1.4`, `1`, and `latest`.
+3. Generates a changelog from the commits since the previous tag and creates a
+   GitHub Release.
+
+**Prerequisite:** the changelog step uses an LLM and requires an `ANTHROPIC_API_KEY`
+repository secret (Settings > Secrets and variables > Actions). Builds on `main`
+(not tags) publish the rolling `edge` tag and a commit-`<sha>` tag instead.

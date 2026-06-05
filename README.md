@@ -267,6 +267,7 @@ Resolution: per-rule `dryRun` (if set) takes precedence over global `dryRun`. Th
 |------|---------|-------------|
 | `--config PATH` | (see resolution below) | Path to YAML config file |
 | `--dry-run` | `false` | Enable dry-run mode (no mutations) |
+| `--version` | -- | Print version, commit, and build date, then exit |
 
 ### Config Path Resolution
 
@@ -298,19 +299,35 @@ Karaclean is designed to run as a Docker container.
 
 ### Image Tags
 
-The Docker image is published to `ghcr.io/lmgarret/karaclean` with two tag strategies:
+Images are published to `ghcr.io/lmgarret/karaclean` and are **multi-arch**
+(`linux/amd64` and `linux/arm64`, so they run on x86 servers and ARM boards like a
+Raspberry Pi or Apple Silicon alike). Pick a tag based on how much you want to trade
+automatic updates for stability:
 
-| Tag | Description |
-|-----|-------------|
-| `latest` | Always points to the most recent build from the `main` branch |
-| `<sha>` | Short Git commit SHA (e.g., `abc1234`) for pinning to a specific build |
+| Tag | Points to | Use case |
+|-----|-----------|----------|
+| `latest` | Newest stable release | Track the latest release, hands-off |
+| `1` | Latest `1.x` release | Get features and fixes within a major version |
+| `1.4` | Latest `1.4.x` patch | Get bug-fix patches within a minor version |
+| `1.4.2` | One exact, immutable release | Reproducible, pinned deployments |
+| `edge` | Latest `main` build (unstable) | Try unreleased changes |
+| `<sha>` | One exact commit | Debug a specific build |
 
 ```bash
-docker pull ghcr.io/lmgarret/karaclean:latest
-docker pull ghcr.io/lmgarret/karaclean:<sha>
+docker pull ghcr.io/lmgarret/karaclean:latest   # newest release
+docker pull ghcr.io/lmgarret/karaclean:1        # newest 1.x
+docker pull ghcr.io/lmgarret/karaclean:1.4.2    # exact release
 ```
 
-**Recommendation:** Pin to a SHA tag in production to avoid unexpected changes from new builds.
+**Recommendation:** Pin to a minor (`:1.4`) or exact (`:1.4.2`) tag in production so
+updates are deliberate. For the strongest guarantee, pin to an immutable **digest** --
+it can never move, even if a tag is re-pushed:
+
+```bash
+docker pull ghcr.io/lmgarret/karaclean@sha256:<digest>
+```
+
+Avoid `:edge` and `:<sha>` outside of testing -- they track unreleased code.
 
 ### Building the Image
 
@@ -438,6 +455,23 @@ go build -o karaclean ./cmd/karaclean
 ```
 
 Requires Go 1.26 or later.
+
+The binary is version-stamped at build time. Check it with:
+
+```bash
+karaclean --version
+# karaclean 1.4.2 (commit abc1234, built 2026-06-05)
+```
+
+## Releases
+
+Releases are cut by pushing a Git tag of the form `vX.Y.Z`. A [GitHub Actions
+workflow](.github/workflows/release.yml) then builds the multi-arch image, publishes
+the full tag ladder (`X.Y.Z`, `X.Y`, `X`, and `latest`), and creates a
+[GitHub Release](https://github.com/lmgarret/karaclean/releases) with a changelog
+generated from the commits since the previous tag. See the [Image Tags](#image-tags)
+table for how to consume them, and [CONTRIBUTING.md](CONTRIBUTING.md#releasing) for the
+maintainer steps.
 
 ## Config Validation
 
