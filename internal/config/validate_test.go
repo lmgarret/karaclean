@@ -619,7 +619,7 @@ func TestValidateNotifications(t *testing.T) {
 func TestValidationErrors_Error(t *testing.T) {
 	ve := &config.ValidationErrors{
 		Errors: []config.ValidationError{
-			{Field: "rules[0].action", Message: `invalid value "remove" (must be archive or delete)`},
+			{Field: "rules[0].action", Message: `invalid value "remove" (must be one of: archive, delete, favourite, tag, unfavourite, unarchive, untag)`},
 			{Field: "rules[1].conditions.source", Message: `invalid value "feed" (must be rss, web, api, mobile, extension, cli, import)`},
 		},
 	}
