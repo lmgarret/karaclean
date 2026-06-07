@@ -97,6 +97,93 @@ func TestValidate(t *testing.T) {
 			},
 		},
 		{
+			name: "valid action unarchive",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d"), Archived: boolPtr(true)},
+					Action:     "unarchive",
+				}},
+			},
+		},
+		{
+			name: "valid action favourite",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "favourite",
+				}},
+			},
+		},
+		{
+			name: "valid action unfavourite",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "unfavourite",
+				}},
+			},
+		},
+		{
+			name: "valid action tag with tag",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "tag",
+					Tag:        strPtr("delete-candidate"),
+				}},
+			},
+		},
+		{
+			name: "valid action untag with tag",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "untag",
+					Tag:        strPtr("stale"),
+				}},
+			},
+		},
+		{
+			name: "tag action missing tag",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "tag",
+				}},
+			},
+			wantErr: []string{`rules[0].tag: action "tag" requires a non-empty "tag"`},
+		},
+		{
+			name: "tag action empty tag",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "tag",
+					Tag:        strPtr(""),
+				}},
+			},
+			wantErr: []string{`rules[0].tag: action "tag" requires a non-empty "tag"`},
+		},
+		{
+			name: "tag set on non-tag action rejected",
+			cfg: config.Config{
+				Schedule: "0 3 * * *",
+				Rules: []config.Rule{{
+					Conditions: &config.Conditions{OlderThan: strPtr("30d")},
+					Action:     "delete",
+					Tag:        strPtr("oops"),
+				}},
+			},
+			wantErr: []string{`rules[0].tag: "tag" is only valid for actions: tag, untag`},
+		},
+		{
 			name: "missing conditions",
 			cfg: config.Config{
 				Schedule: "0 3 * * *",

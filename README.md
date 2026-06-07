@@ -10,7 +10,7 @@ A Docker sidecar that automatically cleans up Karakeep bookmarks based on declar
 
 [Karakeep](https://github.com/karakeep-app/karakeep) is a self-hosted bookmark manager. Over time, bookmarks accumulate -- RSS feeds import dozens a day, browser extensions capture pages you never revisit, and your collection grows into a sprawling backlog. Cleaning it up manually is tedious and easy to forget.
 
-Karaclean solves this by letting you define declarative YAML rules that describe which bookmarks to archive or delete, and when. It runs as a Docker sidecar alongside your Karakeep instance on a cron schedule, evaluating every bookmark against your rules each cycle.
+Karaclean solves this by letting you define declarative YAML rules that describe which bookmarks to archive, tag, favourite or delete, and when. It runs as a Docker sidecar alongside your Karakeep instance on a cron schedule, evaluating every bookmark against your rules each cycle.
 
 Safety is built in. A **dry-run mode** lets you preview exactly what would happen before any mutations execute. **Exception clauses** protect bookmarks you care about -- favourites, tagged items, bookmarks with personal notes, or bookmarks in specific lists. **Strict config validation** rejects unknown fields at startup, so a typo like `olderThen` is caught immediately instead of silently ignored.
 
@@ -85,9 +85,28 @@ Configuration is a single YAML file. See [`karaclean.example.yaml`](karaclean.ex
 | `name` | string | Yes | Human-readable rule identifier (used in logs) |
 | `conditions` | object | Yes | Matching criteria (all must match -- AND semantics) |
 | `unless` | object | No | Exception criteria (any match skips -- OR semantics) |
-| `action` | string | Yes | `archive` or `delete` |
+| `action` | string | Yes | What to do with matched bookmarks. One of `archive`, `unarchive`, `delete`, `tag`, `untag`, `favourite`, `unfavourite` (see [Actions](#actions)) |
+| `tag` | string | Conditional | Tag name to attach/detach. **Required** for `action: tag` and `action: untag`; must not be set for any other action. |
 | `dryRun` | bool | No | Override global dry-run for this rule. `true` forces dry-run, `false` forces live mode, omitted inherits global setting. |
 | `notify` | string | No | Channel name for this rule's notification (overrides `default`). Must reference a channel defined in `notifications.channels`. |
+
+### Actions
+
+The `action` field selects what karaclean does with each matched bookmark. Only `delete` is irreversible; the rest are safe, reversible operations against the Karakeep API.
+
+| Action | Effect | Requires `tag` | Reversible |
+|--------|--------|:---:|:---:|
+| `archive` | Set the bookmark's archived flag to `true` | — | ✅ (`unarchive`) |
+| `unarchive` | Set the bookmark's archived flag to `false` | — | ✅ (`archive`) |
+| `delete` | Permanently remove the bookmark | — | ❌ |
+| `tag` | Attach the named tag (created if it doesn't exist) | ✅ | ✅ (`untag`) |
+| `untag` | Detach the named tag | ✅ | ✅ (`tag`) |
+| `favourite` | Star the bookmark (favourited = `true`) | — | ✅ (`unfavourite`) |
+| `unfavourite` | Unstar the bookmark (favourited = `false`) | — | ✅ (`favourite`) |
+
+> **Testing changes safely.** Before letting any rule run live, preview it with [dry-run mode](#dry-run-mode) — it logs exactly what each rule *would* do without touching a single bookmark. This is the recommended way to validate a new or edited rule, especially anything using `delete`. Dry-run works for every action, including the destructive ones.
+>
+> **A standing review workflow.** Dry-run is great for vetting a rule, but its output lives in logs. If you'd rather curate inside Karakeep itself, use `tag` as a non-destructive stand-in for `delete`: point a `tag` rule at the conditions you'd eventually delete on (e.g. `tag: delete-candidate`), then browse that tag in Karakeep for a periodic manual pass. Delete the survivors with a later `delete` rule, or clear the tag from keepers with `untag`.
 
 ### Conditions (AND semantics)
 
@@ -216,6 +235,34 @@ RSS bookmarks older than 60 days are deleted -- unless they've been added to the
 ```
 
 Mobile bookmarks are often quick saves. This rule archives them after 2 weeks, but keeps any that have personal notes.
+
+### 8. Flag deletion candidates with a tag instead of deleting
+
+```yaml
+- name: flag-stale-for-review
+  conditions:
+    olderThan: "90d"
+    archived: true
+  unless:
+    hasTag: keep-forever
+    hasNote: true
+  action: tag
+  tag: delete-candidate
+```
+
+Instead of deleting straight away, this tags old archived bookmarks with `delete-candidate`. Browse that tag in Karakeep for a final manual review, then delete the survivors (or remove the tag with an `untag` rule). A safer on-ramp to automated cleanup.
+
+### 9. Unarchive recent items so they resurface for review
+
+```yaml
+- name: resurface-recently-archived
+  conditions:
+    archived: true
+    hasTag: revisit
+  action: unarchive
+```
+
+Bookmarks tagged `revisit` are pulled back out of the archive so they show up in your main list again -- a gentle reminder to take another look.
 
 ## Rule Evaluation
 
@@ -382,7 +429,7 @@ services:
 Karaclean logs structured information at key points:
 
 - **Startup:** Logs authentication check result, dry-run status, timezone (with a warning if defaulting to UTC), and the next scheduled run time.
-- **Each run:** Logs a summary line: `run complete: archived=N deleted=M no_match=K excepted=J errors=E total_size=X.X MB`
+- **Each run:** Logs a summary line: `run complete: archived=N deleted=M no_match=K excepted=J errors=E total_size=X.X MB`. The `archived`, `deleted` and total counters always appear; counters for the other actions (`unarchived`, `tagged`, `untagged`, `favourited`, `unfavourited`) are added only when non-zero.
 - **Bookmark size:** Action log lines include human-readable file size (e.g., `size=1.2 MB`) when the bookmark has associated content. The run summary includes `total_size` showing total bytes processed (including dry-run actions).
 - **Immediate first run:** Karaclean executes a run immediately at startup (synchronous, before the cron scheduler begins), so you get feedback right away.
 - **Cron schedule:** Subsequent runs follow the configured cron schedule.
@@ -435,7 +482,7 @@ Channel resolution order:
 
 ### Message Format
 
-Each notification includes the rule name, action counts, and is sent only when the rule produced activity (archived, deleted, or errored bookmarks). Rules that only matched excepted bookmarks are silent.
+Each notification includes the rule name, action counts, and is sent only when the rule produced activity (any action was taken, or the rule errored). Rules that only matched excepted bookmarks are silent.
 
 ### Notification Failures
 
@@ -479,7 +526,8 @@ Karaclean validates your config file thoroughly at startup, before any rules exe
 
 - **Unknown fields are rejected.** A typo like `olderThen` instead of `olderThan` produces a clear error immediately, rather than being silently ignored.
 - **Missing required fields** (`conditions`, `action`, `schedule`) produce descriptive error messages.
-- **Invalid enum values** for `source` (must be one of `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`) and `action` (must be `archive` or `delete`) are caught.
+- **Invalid enum values** for `source` (must be one of `rss`, `web`, `api`, `mobile`, `extension`, `cli`, `import`) and `action` (must be one of `archive`, `unarchive`, `delete`, `tag`, `untag`, `favourite`, `unfavourite`) are caught.
+- **Tag-field consistency** is enforced: `tag`/`untag` actions require a non-empty `tag`, and any other action that sets `tag` is rejected.
 - **Invalid duration formats** in `olderThan` are validated (must match `Nh`, `Nd`, `Nw`, `Nmo`, or `Ny`).
 - **Invalid cron expressions** in `schedule` are caught.
 - **Invalid timezone names** in `timezone` are caught.

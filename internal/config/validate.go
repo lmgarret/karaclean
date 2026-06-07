@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -35,7 +36,47 @@ func (e *ValidationErrors) Error() string {
 	return b.String()
 }
 
-var validActions = []string{"archive", "delete"}
+// ActionSpec describes a supported rule action and its parameter requirements.
+type ActionSpec struct {
+	// RequiresTag indicates the action needs a non-empty `tag` field on the rule.
+	RequiresTag bool
+}
+
+// Actions enumerates all supported rule actions. To add a new action, register
+// it here (plus a matching apply func in the engine's action registry) -- the
+// validator and the engine dispatch both derive from this single source.
+var Actions = map[string]ActionSpec{
+	"archive":     {},
+	"unarchive":   {},
+	"delete":      {},
+	"tag":         {RequiresTag: true},
+	"untag":       {RequiresTag: true},
+	"favourite":   {},
+	"unfavourite": {},
+}
+
+// actionNames returns all supported action names sorted alphabetically.
+func actionNames() []string {
+	names := make([]string, 0, len(Actions))
+	for name := range Actions {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
+// tagActions returns the action names that require a `tag` field, sorted.
+func tagActions() []string {
+	var names []string
+	for name, spec := range Actions {
+		if spec.RequiresTag {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
 var validSources = []string{"rss", "web", "api", "mobile", "extension", "cli", "import"}
 
 // Validate checks the semantic correctness of a Config.
@@ -90,17 +131,21 @@ func validateRule(rule Rule, prefix string) []ValidationError {
 	var errs []ValidationError
 
 	// Check action.
+	spec, known := Actions[rule.Action]
 	if rule.Action == "" {
 		errs = append(errs, ValidationError{
 			Field:   prefix,
 			Message: `missing required field "action"`,
 		})
-	} else if !contains(validActions, rule.Action) {
+	} else if !known {
 		errs = append(errs, ValidationError{
 			Field:   prefix + ".action",
-			Message: fmt.Sprintf("invalid value %q (must be archive or delete)", rule.Action),
+			Message: fmt.Sprintf("invalid value %q (must be one of: %s)", rule.Action, strings.Join(actionNames(), ", ")),
 		})
 	}
+
+	// Check the `tag` field against the action's requirements.
+	errs = append(errs, validateRuleTag(rule, spec, known, prefix)...)
 
 	// Check conditions.
 	if rule.Conditions == nil {
@@ -130,6 +175,27 @@ func validateRule(rule Rule, prefix string) []ValidationError {
 		}
 	}
 
+	return errs
+}
+
+// validateRuleTag checks the rule's `tag` field against the action's requirements:
+// tag-bearing actions require a non-empty tag, and other actions must not set one.
+func validateRuleTag(rule Rule, spec ActionSpec, known bool, prefix string) []ValidationError {
+	var errs []ValidationError
+	switch {
+	case known && spec.RequiresTag:
+		if rule.Tag == nil || *rule.Tag == "" {
+			errs = append(errs, ValidationError{
+				Field:   prefix + ".tag",
+				Message: fmt.Sprintf("action %q requires a non-empty \"tag\"", rule.Action),
+			})
+		}
+	case rule.Tag != nil:
+		errs = append(errs, ValidationError{
+			Field:   prefix + ".tag",
+			Message: fmt.Sprintf(`"tag" is only valid for actions: %s`, strings.Join(tagActions(), ", ")),
+		})
+	}
 	return errs
 }
 

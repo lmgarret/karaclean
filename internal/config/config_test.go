@@ -13,6 +13,20 @@ import (
 func strPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool    { return &b }
 
+// TestLoad_ShippedExampleIsValid guards that the example config shipped in the
+// repo root parses and passes validation, so the documented sample never drifts
+// out of sync with the validator.
+func TestLoad_ShippedExampleIsValid(t *testing.T) {
+	path := filepath.Join("..", "..", "karaclean.example.yaml")
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("shipped example config failed to load/validate: %v", err)
+	}
+	if len(cfg.Rules) == 0 {
+		t.Error("expected example config to define at least one rule")
+	}
+}
+
 func TestLoad_ValidFull(t *testing.T) {
 	cfg, err := config.Load("testdata/valid_full.yaml")
 	if err != nil {

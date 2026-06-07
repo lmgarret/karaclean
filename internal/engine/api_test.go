@@ -11,19 +11,35 @@ import (
 // mockAPI is a test double that implements engine.KarakeepAPI.
 // Its existence proves the interface is mockable without importing the karakeep package.
 type mockAPI struct {
-	checkAuthErr       error
-	listBookmarksRet   []engine.Bookmark
-	listBookmarksErr   error
-	archiveBookmarkErr error
-	deleteBookmarkErr  error
+	checkAuthErr         error
+	listBookmarksRet     []engine.Bookmark
+	listBookmarksErr     error
+	archiveBookmarkErr   error
+	unarchiveBookmarkErr error
+	deleteBookmarkErr    error
+	favouriteErr         error
+	unfavouriteErr       error
+	addTagErr            error
+	removeTagErr         error
 
-	archiveBookmarkCalls []string
-	deleteBookmarkCalls  []string
+	archiveBookmarkCalls   []string
+	unarchiveBookmarkCalls []string
+	deleteBookmarkCalls    []string
+	favouriteCalls         []string
+	unfavouriteCalls       []string
+	addTagCalls            []tagCall
+	removeTagCalls         []tagCall
 
-	listListsRet         []engine.ListInfo
-	listListsErr         error
-	getListBookmarksRet  map[string][]string
-	getListBookmarksErr  error
+	listListsRet        []engine.ListInfo
+	listListsErr        error
+	getListBookmarksRet map[string][]string
+	getListBookmarksErr error
+}
+
+// tagCall records an (id, tag) pair passed to a tag/untag API method.
+type tagCall struct {
+	id  string
+	tag string
 }
 
 func (m *mockAPI) CheckAuth(ctx context.Context) error {
@@ -39,9 +55,34 @@ func (m *mockAPI) ArchiveBookmark(ctx context.Context, id string) error {
 	return m.archiveBookmarkErr
 }
 
+func (m *mockAPI) UnarchiveBookmark(ctx context.Context, id string) error {
+	m.unarchiveBookmarkCalls = append(m.unarchiveBookmarkCalls, id)
+	return m.unarchiveBookmarkErr
+}
+
 func (m *mockAPI) DeleteBookmark(ctx context.Context, id string) error {
 	m.deleteBookmarkCalls = append(m.deleteBookmarkCalls, id)
 	return m.deleteBookmarkErr
+}
+
+func (m *mockAPI) FavouriteBookmark(ctx context.Context, id string) error {
+	m.favouriteCalls = append(m.favouriteCalls, id)
+	return m.favouriteErr
+}
+
+func (m *mockAPI) UnfavouriteBookmark(ctx context.Context, id string) error {
+	m.unfavouriteCalls = append(m.unfavouriteCalls, id)
+	return m.unfavouriteErr
+}
+
+func (m *mockAPI) AddTagToBookmark(ctx context.Context, id, tagName string) error {
+	m.addTagCalls = append(m.addTagCalls, tagCall{id: id, tag: tagName})
+	return m.addTagErr
+}
+
+func (m *mockAPI) RemoveTagFromBookmark(ctx context.Context, id, tagName string) error {
+	m.removeTagCalls = append(m.removeTagCalls, tagCall{id: id, tag: tagName})
+	return m.removeTagErr
 }
 
 func (m *mockAPI) ListLists(ctx context.Context) ([]engine.ListInfo, error) {

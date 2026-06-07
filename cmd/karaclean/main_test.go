@@ -101,7 +101,12 @@ type testAPI struct {
 func (t *testAPI) CheckAuth(ctx context.Context) error                                    { return nil }
 func (t *testAPI) ListBookmarks(ctx context.Context) ([]engine.Bookmark, error)           { return nil, nil }
 func (t *testAPI) ArchiveBookmark(ctx context.Context, id string) error                   { return nil }
+func (t *testAPI) UnarchiveBookmark(ctx context.Context, id string) error                 { return nil }
 func (t *testAPI) DeleteBookmark(ctx context.Context, id string) error                    { return nil }
+func (t *testAPI) FavouriteBookmark(ctx context.Context, id string) error                 { return nil }
+func (t *testAPI) UnfavouriteBookmark(ctx context.Context, id string) error               { return nil }
+func (t *testAPI) AddTagToBookmark(ctx context.Context, id, tagName string) error         { return nil }
+func (t *testAPI) RemoveTagFromBookmark(ctx context.Context, id, tagName string) error    { return nil }
 func (t *testAPI) ListLists(ctx context.Context) ([]engine.ListInfo, error)               { return t.listListsRet, t.listListsErr }
 func (t *testAPI) GetListBookmarks(ctx context.Context, listID string) ([]string, error)  { return nil, nil }
 
