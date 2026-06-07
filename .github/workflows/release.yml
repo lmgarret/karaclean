@@ -36,10 +36,17 @@ jobs:
         id: prev_tag
         run: |
           PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          # Legacy tags use the vX.Y form (no patch); nosovj/llm-release-action
-          # requires full semver for current_version, so normalize vX.Y -> vX.Y.0.
+          # The repo's historical tags use the two-component vX.Y form, but
+          # nosovj/llm-release-action both (a) validates current_version as strict
+          # semver and (b) uses it as a git ref (git log <current_version>..HEAD).
+          # A legacy vX.Y satisfies (b) but not (a); a bare vX.Y.0 satisfies (a)
+          # but not (b). Reconcile by creating a local-only full-semver tag alias
+          # at the same commit, so the ref both validates and resolves. The alias
+          # is never pushed, so it triggers nothing.
           if [[ "$PREV" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
-            PREV="${PREV}.0"
+            ALIAS="${PREV}.0"
+            git tag -f "$ALIAS" "$PREV"
+            PREV="$ALIAS"
           fi
           echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
 
