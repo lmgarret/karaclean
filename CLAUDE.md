@@ -21,7 +21,7 @@ Go Docker sidecar for Karakeep bookmark cleanup. Declarative YAML rules, cron-sc
 ## Tech Stack
 
 - Go (module: github.com/lmgarret/karaclean)
-- golangci-lint v2.11 (binary at ~/go/bin/golangci-lint)
+- golangci-lint v2.14 (binary at ~/go/bin/golangci-lint)
 - Docker multi-stage build with scratch final image, multi-arch (amd64 + arm64)
 - CI: GitHub Actions (golangci-lint-action@v9, go test -race)
 

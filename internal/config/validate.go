@@ -8,6 +8,7 @@ import (
 
 	"github.com/lmgarret/karaclean/internal/duration"
 	"github.com/nicholas-fedor/shoutrrr"
+	"github.com/nicholas-fedor/shoutrrr/pkg/types"
 	"github.com/robfig/cron/v3"
 )
 
@@ -290,7 +291,7 @@ func validateNotifications(n *Notifications, rules []Rule) []ValidationError {
 			})
 			continue
 		}
-		if _, err := shoutrrr.CreateSender(ch.URL); err != nil {
+		if _, err := shoutrrr.CreateSenderWithOptions(types.SenderOptions{}, ch.URL); err != nil {
 			errs = append(errs, ValidationError{
 				Field:   fmt.Sprintf("notifications.channels.%s.url", name),
 				Message: fmt.Sprintf("invalid shoutrrr URL: %v", err),
