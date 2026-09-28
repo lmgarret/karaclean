@@ -21,7 +21,7 @@ Run the same checks CI runs:
 
 ```sh
 go test -race ./...
-~/go/bin/golangci-lint run ./...   # golangci-lint v2.11
+~/go/bin/golangci-lint run ./...   # golangci-lint v2.14
 ```
 
 - **Tests must pass** with `-race`. Add tests for new behavior.

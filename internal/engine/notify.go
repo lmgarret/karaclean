@@ -65,9 +65,9 @@ type Notifier interface {
 // ShoutrrrNotifier sends notifications via the Shoutrrr library.
 type ShoutrrrNotifier struct{}
 
-// Send dispatches a notification using shoutrrr.CreateSender with title params.
+// Send dispatches a notification using shoutrrr.CreateSenderWithOptions with title params.
 func (n *ShoutrrrNotifier) Send(url, message, title string) error {
-	sender, err := shoutrrr.CreateSender(url)
+	sender, err := shoutrrr.CreateSenderWithOptions(types.SenderOptions{}, url)
 	if err != nil {
 		return fmt.Errorf("creating sender: %w", err)
 	}
