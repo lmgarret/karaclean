@@ -30,7 +30,7 @@ Go Docker sidecar for Karakeep bookmark cleanup. Declarative YAML rules, cron-sc
 - Tag-driven: pushing a `vX.Y.Z` git tag runs `.github/workflows/release.yml`.
 - Docker tags published per release: `X.Y.Z`, `X.Y`, `X`, and `latest` (= newest
   release). Main-branch builds publish `edge` + commit `<sha>` (see `ci.yml`).
-- Changelog is AI-generated from commits via `nosovj/llm-release-action`; requires an
+- Changelog is AI-generated from commits via `lmgarret/llm-release-action`; requires an
   `ANTHROPIC_API_KEY` repository secret. No `CHANGELOG.md` is committed -- the changelog
   lives in GitHub Releases.
 - Version is stamped into the binary via `-ldflags` (`main.version/commit/date`),
