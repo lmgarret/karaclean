@@ -25,13 +25,6 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.11'
-
-      - name: Install missing language_data dependency
-        run: pip install language_data
-
       - name: Find previous tag
         id: prev_tag
         run: |
@@ -52,11 +45,13 @@ jobs:
 
       - name: Generate AI changelog
         id: changelog
-        uses: lmgarret/llm-release-action@02df3fe046a072d722b49ff3670c5491dca7b708 # v1.1.0
+        uses: lmgarret/llm-release-action@89ad4c3af8aa41030849a703ab6b081d0d384186 # v1.2.0
         with:
           model: anthropic/claude-sonnet-5-5
           model_analysis: anthropic/claude-haiku-5-5
           current_version: ${{ steps.prev_tag.outputs.tag }}
+          # Self-hosted sidecar: breaking means operators must change their config.
+          project_type: service
           changelog_config: |
             default:
               languages: [en]
