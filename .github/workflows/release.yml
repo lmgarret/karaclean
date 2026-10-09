@@ -45,6 +45,9 @@ jobs:
 
       - name: Generate AI changelog
         id: changelog
+        # On tag pushes the version comes from the tag, so an LLM outage only
+        # drops the AI changelog. Manual runs need next_version, so they still fail.
+        continue-on-error: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: lmgarret/llm-release-action@89ad4c3af8aa41030849a703ab6b081d0d384186 # v1.2.0
         with:
           model: anthropic/claude-sonnet-5-5
@@ -61,7 +64,7 @@ jobs:
               include_infrastructure: false
               summary_only: false
               emojis: true
-          context_files: README.md,CLAUDE.md
+          context_files: README.md,CLAUDE.md,karaclean.example.yaml
           max_commits: 50
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
