@@ -48,7 +48,7 @@ jobs:
         # On tag pushes the version comes from the tag, so an LLM outage only
         # drops the AI changelog. Manual runs need next_version, so they still fail.
         continue-on-error: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: lmgarret/llm-release-action@89ad4c3af8aa41030849a703ab6b081d0d384186 # v1.2.0
+        uses: lmgarret/llm-release-action@d0581cd59ed14f3db5864b2ca6479a6623c308ab # v2.1.0
         with:
           model: anthropic/claude-sonnet-5-5
           model_analysis: anthropic/claude-haiku-5-5
