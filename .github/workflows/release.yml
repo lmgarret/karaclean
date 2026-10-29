@@ -48,7 +48,7 @@ jobs:
         # On tag pushes the version comes from the tag, so an LLM outage only
         # drops the AI changelog. Manual runs need next_version, so they still fail.
         continue-on-error: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: lmgarret/llm-release-action@89ad4c3af8aa41030849a703ab6b081d0d384186 # v1.2.0
+        uses: lmgarret/llm-release-action@d0581cd59ed14f3db5864b2ca6479a6623c308ab # v2.1.0
         with:
           model: anthropic/claude-sonnet-5-5
           model_analysis: anthropic/claude-haiku-5-5
@@ -138,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
