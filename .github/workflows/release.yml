@@ -29,13 +29,11 @@ jobs:
         id: prev_tag
         run: |
           PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          # The repo's historical tags use the two-component vX.Y form, but
-          # llm-release-action both (a) validates current_version as strict
-          # semver and (b) uses it as a git ref (git log <current_version>..HEAD).
-          # A legacy vX.Y satisfies (b) but not (a); a bare vX.Y.0 satisfies (a)
-          # but not (b). Reconcile by creating a local-only full-semver tag alias
-          # at the same commit, so the ref both validates and resolves. The alias
-          # is never pushed, so it triggers nothing.
+          # Legacy two-component vX.Y tags are not strict semver, which
+          # llm-release-action requires for current_version. Create a
+          # local-only vX.Y.0 alias at the same commit and pass it as both
+          # base_ref and current_version. The alias is never pushed, so it
+          # triggers nothing.
           if [[ "$PREV" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
             ALIAS="${PREV}.0"
             git tag -f "$ALIAS" "$PREV"
@@ -48,10 +46,11 @@ jobs:
         # On tag pushes the version comes from the tag, so an LLM outage only
         # drops the AI changelog. Manual runs need next_version, so they still fail.
         continue-on-error: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: lmgarret/llm-release-action@89ad4c3af8aa41030849a703ab6b081d0d384186 # v1.2.0
+        uses: lmgarret/llm-release-action@d83e2c706b87f8a94a53f3b6d11d8610ace338e3 # v2.2.0
         with:
           model: anthropic/claude-sonnet-5-5
-          model_analysis: anthropic/claude-haiku-5-5
+          fast_model: anthropic/claude-haiku-5-5
+          base_ref: ${{ steps.prev_tag.outputs.tag }}
           current_version: ${{ steps.prev_tag.outputs.tag }}
           # Self-hosted sidecar: breaking means operators must change their config.
           project_type: service
@@ -65,7 +64,6 @@ jobs:
               summary_only: false
               emojis: true
           context_files: README.md,CLAUDE.md,karaclean.example.yaml
-          max_commits: 50
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
