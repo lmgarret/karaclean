@@ -4,10 +4,10 @@ go 1.27
 
 require (
 	github.com/nicholas-fedor/shoutrrr v0.22.1
-	github.com/oapi-codegen/oapi-codegen/v2 v2.8.1
+	github.com/oapi-codegen/oapi-codegen/v2 v2.8.2
 	github.com/oapi-codegen/runtime v1.8.0
 	github.com/robfig/cron/v3 v3.0.1
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 )
 
 require (
